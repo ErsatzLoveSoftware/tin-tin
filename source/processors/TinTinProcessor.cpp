@@ -1,6 +1,7 @@
 #include "TinTinProcessor.h"
 
-#include "../WammyHelpers.h"
+#include <vector>
+
 #include "../NoteLogger.h"
 #include "../containers/Traid.h"
 
@@ -31,7 +32,7 @@ void TinTinProcessor::cacheNoteOnPair(NoteOnPair& noteOnPair)
         _globalVoiceTick++;
         _directionTick++;
         _positionTick++;
-        _noteOnMVoices.emplace_back(noteOnPair);
+        _noteOnMVoices.push_back(noteOnPair);
     }
 }
 
@@ -68,21 +69,30 @@ void TinTinProcessor::process(juce::MidiBuffer& outMidiBuffer)
 
         if (mVoiceMidiMessage.isNoteOff())
         {
-            
-            // TODO: Turn off "T" voice!
-//            std::erase(_noteOnMVoices, mVoiceNote);
+            for (const NoteOnPair& noteOnPair : _noteOnMVoices)
+            {
+                if (noteOnPair.mVoiceMidiMessage.getNoteNumber() == mVoiceNote)
+                {
+//                    juce::MidiMessage::noteOff(1, noteOnPair.mVoiceMidiMessage.getNoteNumber());
+//                    juce::MidiMessage::noteOff(1, noteOnPair.tVoiceMidiMessage.getNoteNumber());
+//                    _noteOnMVoices.erase(_noteOnMVoices.begin() + 1);
+                }
+            }
         }
 
-        _tVoiceMidiMessage = mVoiceMidiMessage;
-        MidiNote tVoice = resolveTVoice(mVoiceNote);
-        _tVoiceMidiMessage.setNoteNumber(tVoice);
-        
-        NoteOnPair noteOnPair{ midiMetadata.samplePosition, mVoiceMidiMessage, _tVoiceMidiMessage };
-        cacheNoteOnPair(noteOnPair);
+        if (mVoiceMidiMessage.isNoteOn())
+        {
+            _tVoiceMidiMessage = mVoiceMidiMessage;
+            MidiNote tVoice = resolveTVoice(mVoiceNote);
+            _tVoiceMidiMessage.setNoteNumber(tVoice);
 
 //        _tVoiceMidiMessage.setNoteNumber(mVoiceNote + tVoice);
-        // TODO: Send set note numbers to UI component via FIFO.
-        _processedMidiBuffer.addEvent(_tVoiceMidiMessage, midiMetadata.samplePosition);
+            // TODO: Send set note numbers to UI component via FIFO.
+            _processedMidiBuffer.addEvent(_tVoiceMidiMessage, midiMetadata.samplePosition);
+
+            NoteOnPair noteOnPair{ midiMetadata.samplePosition, mVoiceMidiMessage, _tVoiceMidiMessage };
+//            cacheNoteOnPair(noteOnPair);
+        }
     }
 
     outMidiBuffer.swapWith(_processedMidiBuffer);
@@ -180,6 +190,8 @@ MidiInterval TinTinProcessor::resolvedPosition(IntervalPositionPair voiceInterva
                voiceIntervalPair.firstPosition :
                voiceIntervalPair.secondPosition;
     }
+    
+    juce::Logger::outputDebugString("tVoicePosition is out of bounds of ETinTinPosition options.");
 
     return -1111; // Error.
 }
@@ -194,9 +206,7 @@ MidiNote TinTinProcessor::resolveTVoice(MidiNote mVoice)
             continue;
         }
 
-        auto resolvePositionAndOctave = [&](
-            const IntervalPositionPair& positionPair,
-            const TinTinOctave& octave) -> MidiNote
+        auto resolvePositionAndOctave = [&](const TinTinOctave& octave) -> MidiNote
         {
             MidiNote tVoice = mVoice + resolvedPosition(voiceCache.superiorVoice) +
                 (NUM_SEMI_TONES_IN_OCTAVE * static_cast<int>(octave.relativeOctave));
@@ -213,20 +223,22 @@ MidiNote TinTinProcessor::resolveTVoice(MidiNote mVoice)
         switch (tVoiceDirection)
         {
         case (ETinTinDirection::Superior):
-            return resolvePositionAndOctave(voiceCache.superiorVoice, superiorOctave);
+            return resolvePositionAndOctave(superiorOctave);
 
         case (ETinTinDirection::Inferior):
-            return resolvePositionAndOctave(voiceCache.inferiorVoices, inferiorOctave);
+            return resolvePositionAndOctave(inferiorOctave);
 
         case (ETinTinDirection::Alternating):
             if (_directionTick % 2 == 0)
             {
-                return resolvePositionAndOctave(voiceCache.inferiorVoices, inferiorOctave);
+                return resolvePositionAndOctave(inferiorOctave);
             }
 
-            return resolvePositionAndOctave(voiceCache.superiorVoice, superiorOctave);
+            return resolvePositionAndOctave(superiorOctave);
         }
     }
+
+    juce::Logger::outputDebugString("Out of bounds from switch options..");
 
     return -1; // Error.
 }

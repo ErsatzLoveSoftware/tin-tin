@@ -13,7 +13,7 @@ class Triad
 public:
     Triad() = delete;
 
-    // Add template function to take in any number of array size.
+    // TODO: Add template function to take in any number of array size.
     JUCE_NODISCARD static Triad emptyTriad()
     {
         return { -1, -1, -1, "" };

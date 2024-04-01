@@ -4,7 +4,7 @@
 
 #pragma once
 
-#include <algorithm>
+#include <utility>
 
 #include "../WammyHelpers.h"
 #include "../containers/TinTinContainers.h"
@@ -114,9 +114,20 @@ private:
 
     struct NoteOnPair
     {
-        int samplePosition;
-        juce::MidiMessage& mVoiceMidiMessage;
-        juce::MidiMessage& tVoiceMidiMessage;
+        NoteOnPair(
+            int inSamplePosition,
+            juce::MidiMessage inMVoiceMidiMessage,
+            juce::MidiMessage inTVoiceMidiMessage
+        ) :
+            samplePosition(inSamplePosition),
+            mVoiceMidiMessage(std::move(inMVoiceMidiMessage)),
+            tVoiceMidiMessage(std::move(inTVoiceMidiMessage))
+        {
+        }
+
+        int samplePosition{0};
+        juce::MidiMessage mVoiceMidiMessage;
+        juce::MidiMessage tVoiceMidiMessage;
     };
     
     std::vector<NoteOnPair> _noteOnMVoices{};
