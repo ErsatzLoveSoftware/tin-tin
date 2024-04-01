@@ -1,0 +1,64 @@
+name: CI
+
+on:
+  workflow_dispatch:
+  push:
+
+env:
+  CMAKE_BUILD_PARALLEL_LEVEL: 3 # Use up to 3 cpus to build juceaide, etc
+
+concurrency:
+  group: ${{ github.workflow }}.${{ github.ref }}
+  cancel-in-progress: true
+
+defaults:
+  run:
+    shell: bash
+
+permissions:
+  contents: read
+
+jobs:
+
+  BuildAndTest:
+    name: ${{ matrix.os }} ${{ matrix.app }}
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 10
+
+    strategy:
+      fail-fast: false
+      matrix:
+        app: [member_enabled, member_disabled, unique_ptr_enabled, unique_ptr_disabled]
+        os: [macos-latest, windows-latest]
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+        with:
+          fetch-depth: 1
+
+      - name: Configure
+        run: cmake -B Builds -DTARGET_NAME:STRING=${{ matrix.app }}
+
+      - name: Build
+        run: cmake --build Builds --parallel 4
+
+      - name: Run
+        if: ${{ matrix.os == 'macos-latest' }}
+        working-directory: Builds/${{ matrix.app }}_artefacts
+        timeout-minutes: 1
+        run: |
+          ls -ahl
+          ${{ matrix.app }}.app/Contents/MacOS/${{ matrix.app }} &
+
+      - name: Run
+        if: ${{ matrix.os == 'windows-latest' }}
+        working-directory: Builds/${{ matrix.app }}_artefacts
+        timeout-minutes: 1
+        run: |
+          ls -ahl
+          ./Debug/${{ matrix.app }}.exe &
+
+      - uses: OrbitalOwen/desktop-screenshot-action@0.1
+        with:
+          file-name: ${{ matrix.os }}-${{matrix.app}}.jpg
