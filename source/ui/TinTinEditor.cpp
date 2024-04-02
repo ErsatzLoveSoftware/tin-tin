@@ -1,6 +1,4 @@
 #include "TinTinEditor.h"
-#include "../processors/TinTinProcessor.h"
-#include "../WammyHelpers.h"
 
 namespace tin_tin::editor_consts
 {
@@ -9,7 +7,6 @@ namespace tin_tin::editor_consts
     // Plugin dimensions.
     constexpr int WIDTH = 550;
     constexpr int HEIGHT = 300;
-    
     constexpr int PARENT_PADDING = 20;
 }
 
