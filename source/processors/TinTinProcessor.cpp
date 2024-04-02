@@ -1,7 +1,5 @@
 #include "TinTinProcessor.h"
 
-#include <vector>
-
 #include "../NoteLogger.h"
 #include "../containers/Traid.h"
 
@@ -36,18 +34,22 @@ void TinTinProcessor::cacheNoteOnPair(NoteOnPair& noteOnPair)
     }
 }
 
-void TinTinProcessor::process(juce::MidiBuffer& outMidiBuffer)
+void TinTinProcessor::processImpl(juce::MidiBuffer& outMidiBuffer)
 {
-    _processedMidiBuffer.clear();
-
+    // :::::::::::::: Panic :::::::::::::: 
     if (_shouldPanic) // TODO: Make this work.
     {
-        for (const juce::MidiMessageMetadata& midiMetadata : outMidiBuffer)
+        juce::MidiMessage offMidiMessage{};
+        for (int channelNumber = 1; channelNumber < NUM_MIDI_CHANNELS; ++channelNumber)
         {
-            for (int i = 0; i < 16; ++i)
+            for (int noteNumber = 0; noteNumber < NUM_MIDI_NOTES; ++noteNumber)
             {
-                juce::MidiMessage offMidiMessage = juce::MidiMessage::allNotesOff(i);
-                _processedMidiBuffer.addEvent(juce::MidiMessage::allNotesOff(i), midiMetadata.samplePosition);
+                offMidiMessage = juce::MidiMessage::noteOff(
+                    channelNumber,
+                    noteNumber
+                );
+
+                _processedMidiBuffer.addEvent(offMidiMessage, 0);
             }
         }
 
@@ -55,47 +57,63 @@ void TinTinProcessor::process(juce::MidiBuffer& outMidiBuffer)
         return;
     }
 
+    // :::::::::::::: Bypass :::::::::::::: 
     if (_bypass)
     {
         return;
     }
 
-    // Apply T-Voice
+    // :::::::::::::: Apply T-Voice ::::::::::::::
     for (const juce::MidiMessageMetadata& midiMetadata : outMidiBuffer)
     {
         juce::MidiMessage mVoiceMidiMessage = midiMetadata.getMessage();
         MidiNote mVoiceNote = mVoiceMidiMessage.getNoteNumber();
         _processedMidiBuffer.addEvent(mVoiceMidiMessage, midiMetadata.samplePosition);
 
-        if (mVoiceMidiMessage.isNoteOff())
+        if (mVoiceMidiMessage.isNoteOff()) // Turn off voice pair.
         {
             for (const NoteOnPair& noteOnPair : _noteOnMVoices)
             {
                 if (noteOnPair.mVoiceMidiMessage.getNoteNumber() == mVoiceNote)
                 {
-//                    juce::MidiMessage::noteOff(1, noteOnPair.mVoiceMidiMessage.getNoteNumber());
-//                    juce::MidiMessage::noteOff(1, noteOnPair.tVoiceMidiMessage.getNoteNumber());
-//                    _noteOnMVoices.erase(_noteOnMVoices.begin() + 1);
+                    juce::MidiMessage mVoiceOffMessage = juce::MidiMessage::noteOff(
+                        noteOnPair.mVoiceMidiMessage.getChannel(),
+                        noteOnPair.mVoiceMidiMessage.getNoteNumber()
+                    );
+
+                    juce::MidiMessage tVoiceOffMessage = juce::MidiMessage::noteOff(
+                        noteOnPair.tVoiceMidiMessage.getChannel(),
+                        noteOnPair.tVoiceMidiMessage.getNoteNumber()
+                    );
+
+                    // TODO: Add logic to keep t voice held down if needed.
+                    _processedMidiBuffer.addEvent(mVoiceOffMessage, midiMetadata.samplePosition);
+                    _processedMidiBuffer.addEvent(tVoiceOffMessage, midiMetadata.samplePosition);
                 }
             }
         }
 
-        if (mVoiceMidiMessage.isNoteOn())
+        if (mVoiceMidiMessage.isNoteOn()) // Add t voice to out buffer.
         {
             _tVoiceMidiMessage = mVoiceMidiMessage;
-            MidiNote tVoice = resolveTVoice(mVoiceNote);
-            _tVoiceMidiMessage.setNoteNumber(tVoice);
+            MidiNote tVoiceNote = resolveTVoice(mVoiceNote);
+            _tVoiceMidiMessage.setNoteNumber(tVoiceNote);
 
-//        _tVoiceMidiMessage.setNoteNumber(mVoiceNote + tVoice);
-            // TODO: Send set note numbers to UI component via FIFO.
+            // TODO: Send note numbers to UI component via FIFO.
             _processedMidiBuffer.addEvent(_tVoiceMidiMessage, midiMetadata.samplePosition);
 
             NoteOnPair noteOnPair{ midiMetadata.samplePosition, mVoiceMidiMessage, _tVoiceMidiMessage };
-//            cacheNoteOnPair(noteOnPair);
+            cacheNoteOnPair(noteOnPair);
         }
     }
+}
 
-    outMidiBuffer.swapWith(_processedMidiBuffer);
+void TinTinProcessor::process(juce::MidiBuffer& outMidiBuffer)
+{
+    _processedMidiBuffer.clear();
+    processImpl(outMidiBuffer);
+
+    outMidiBuffer.swapWith(_processedMidiBuffer); // Return.
 }
 
 void TinTinProcessor::updateVoiceCacheMap(
@@ -190,7 +208,7 @@ MidiInterval TinTinProcessor::resolvedPosition(IntervalPositionPair voiceInterva
                voiceIntervalPair.firstPosition :
                voiceIntervalPair.secondPosition;
     }
-    
+
     juce::Logger::outputDebugString("tVoicePosition is out of bounds of ETinTinPosition options.");
 
     return -1111; // Error.

@@ -10,6 +10,8 @@ namespace wammy::consts
 {
     constexpr int NUM_SEMI_TONES_IN_OCTAVE = 12;
     constexpr int INITIAL_M_VOICE_HELD_DOWN_CACHE_SIZE = 12;
+    constexpr int NUM_MIDI_CHANNELS = 16;
+    constexpr int NUM_MIDI_NOTES = 127;
     constexpr std::string_view INVALID_MIDI_NOTE = "INVALID_MIDI_NOTE";
     constexpr size_t RING_BUFFER_SIZE = 512;
 }

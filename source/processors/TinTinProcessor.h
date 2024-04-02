@@ -74,9 +74,9 @@ public:
 
     void process(juce::MidiBuffer& outMidiBuffer);
 
-    static IntervalPositionPair computeInferiorVoices(MidiNote note, const Triad& triad);
+    JUCE_NODISCARD static IntervalPositionPair computeInferiorVoices(MidiNote note, const Triad& triad);
 
-    static IntervalPositionPair computeSuperiorVoices(MidiNote note, const Triad& triad);
+    JUCE_NODISCARD static IntervalPositionPair computeSuperiorVoices(MidiNote note, const Triad& triad);
 
 public:
     // T-Voice relativeOctave controls.
@@ -139,4 +139,6 @@ private:
 
     // TODO: Rename.
     void cacheNoteOnPair(NoteOnPair& noteOnPair);
+    
+    void processImpl(juce::MidiBuffer& outMidiBuffer);
 };
