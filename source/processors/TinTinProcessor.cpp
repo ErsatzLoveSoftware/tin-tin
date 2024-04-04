@@ -37,7 +37,7 @@ void TinTinProcessor::cacheNoteOnPair(NoteOnPair& noteOnPair)
 void TinTinProcessor::processImpl(juce::MidiBuffer& outMidiBuffer)
 {
     // :::::::::::::: Panic :::::::::::::: 
-    if (_shouldPanic) // TODO: Make this work.
+    if (_shouldPanic)
     {
         juce::MidiMessage offMidiMessage{};
         for (int channelNumber = 1; channelNumber < NUM_MIDI_CHANNELS; ++channelNumber)
@@ -57,18 +57,16 @@ void TinTinProcessor::processImpl(juce::MidiBuffer& outMidiBuffer)
         return;
     }
 
-    // :::::::::::::: Bypass :::::::::::::: 
-    if (_bypass)
-    {
-        return;
-    }
-
     // :::::::::::::: Apply T-Voice ::::::::::::::
     for (const juce::MidiMessageMetadata& midiMetadata : outMidiBuffer)
     {
         juce::MidiMessage mVoiceMidiMessage = midiMetadata.getMessage();
         MidiNote mVoiceNote = mVoiceMidiMessage.getNoteNumber();
-        _processedMidiBuffer.addEvent(mVoiceMidiMessage, midiMetadata.samplePosition);
+
+        if (!_shouldMuteMVoice)
+        {
+            _processedMidiBuffer.addEvent(mVoiceMidiMessage, midiMetadata.samplePosition);
+        }
 
         if (mVoiceMidiMessage.isNoteOff()) // Turn off voice pair.
         {
@@ -87,7 +85,11 @@ void TinTinProcessor::processImpl(juce::MidiBuffer& outMidiBuffer)
                     );
 
                     // TODO: Add logic to keep t voice held down if needed.
-                    _processedMidiBuffer.addEvent(mVoiceOffMessage, midiMetadata.samplePosition);
+                    if (!_shouldMuteMVoice)
+                    {
+                        _processedMidiBuffer.addEvent(mVoiceOffMessage, midiMetadata.samplePosition);
+                    }
+
                     _processedMidiBuffer.addEvent(tVoiceOffMessage, midiMetadata.samplePosition);
                 }
             }
@@ -111,6 +113,13 @@ void TinTinProcessor::processImpl(juce::MidiBuffer& outMidiBuffer)
 void TinTinProcessor::process(juce::MidiBuffer& outMidiBuffer)
 {
     _processedMidiBuffer.clear();
+
+    // :::::::::::::: Bypass :::::::::::::: 
+    if (_bypass)
+    {
+        return;
+    }
+
     processImpl(outMidiBuffer);
 
     outMidiBuffer.swapWith(_processedMidiBuffer); // Return.
@@ -224,9 +233,12 @@ MidiNote TinTinProcessor::resolveTVoice(MidiNote mVoice)
             continue;
         }
 
-        auto resolvePositionAndOctave = [&](const TinTinOctave& octave) -> MidiNote
+        auto resolvePositionAndOctave = [&](
+            const TinTinOctave& octave,
+            const IntervalPositionPair& positionPair
+        ) -> MidiNote
         {
-            MidiNote tVoice = mVoice + resolvedPosition(voiceCache.superiorVoice) +
+            MidiNote tVoice = mVoice + resolvedPosition(positionPair) +
                 (NUM_SEMI_TONES_IN_OCTAVE * static_cast<int>(octave.relativeOctave));
 
             if (octave.isStatic)
@@ -241,18 +253,19 @@ MidiNote TinTinProcessor::resolveTVoice(MidiNote mVoice)
         switch (tVoiceDirection)
         {
         case (ETinTinDirection::Superior):
-            return resolvePositionAndOctave(superiorOctave);
+            return resolvePositionAndOctave(superiorOctave, voiceCache.superiorVoice);
 
         case (ETinTinDirection::Inferior):
-            return resolvePositionAndOctave(inferiorOctave);
+            return resolvePositionAndOctave(inferiorOctave, voiceCache.inferiorVoices);
 
         case (ETinTinDirection::Alternating):
+            
             if (_directionTick % 2 == 0)
             {
-                return resolvePositionAndOctave(inferiorOctave);
+                return resolvePositionAndOctave(inferiorOctave, voiceCache.inferiorVoices);
             }
 
-            return resolvePositionAndOctave(superiorOctave);
+            return resolvePositionAndOctave(superiorOctave, voiceCache.superiorVoice);
         }
     }
 

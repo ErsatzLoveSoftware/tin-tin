@@ -22,7 +22,7 @@ TinTinEditor::TinTinEditor(PluginProcessor& p) :
 
     auto bounds = getBounds(); // TODO: Use.
 
-//    addAndMakeVisible(_bypassToggle);
+    addAndMakeVisible(_bypassToggle);
     constexpr int bypassPositionX = 370;
     constexpr int bypassPositionY = 29;
     constexpr int bypassWidth = 80;
@@ -38,6 +38,25 @@ TinTinEditor::TinTinEditor(PluginProcessor& p) :
     _bypassToggle.onClick = [&]() -> void
     {
         _processorRef.tinTinProcessor.toggleBypass();
+        
+        if (_bypassToggle.getToggleState() && _muteMVoiceToggle.getToggleState())
+        {
+            _muteMVoiceToggle.setColour(
+                juce::ToggleButton::ColourIds::textColourId,
+                juce::Colour::fromRGB(255, 0, 40)
+            );
+
+            _muteMVoiceToggle.repaint();
+        }
+        else
+        {
+            _muteMVoiceToggle.setColour(
+                juce::ToggleButton::ColourIds::textColourId,
+                juce::Colour::fromRGB(255, 255, 255)
+            );
+
+            _muteMVoiceToggle.repaint();
+        }
     };
 
     setupPanicButton();
@@ -45,6 +64,7 @@ TinTinEditor::TinTinEditor(PluginProcessor& p) :
     setupTriadTypeComboBox();
     setupTVoiceDirectionComboBox();
     setupTVoicePositionComboBox();
+    setupMVoiceMuteToggle();
 
     addAndMakeVisible(_octaveComponent);
     _octaveComponent.setBounds(140, 107, 300, 80);
@@ -239,6 +259,40 @@ void TinTinEditor::setupTVoicePositionComboBox()
     };
 }
 
+void TinTinEditor::setupMVoiceMuteToggle()
+{
+    constexpr int selectorPositionX = 140 + PARENT_PADDING;
+    constexpr int selectorPositionY = 190;
+    constexpr int selectorWidth = 200;
+    constexpr int selectorHeight = 20;
+
+    addAndMakeVisible(_muteMVoiceToggle);
+    _muteMVoiceToggle.setBounds(selectorPositionX, selectorPositionY, selectorWidth, selectorHeight);
+    _muteMVoiceToggle.onStateChange = [&]() -> void
+    {
+        _processorRef.tinTinProcessor.toggleMuteMVoice();
+        
+        if (!_muteMVoiceToggle.getToggleState())
+        {
+            _muteMVoiceToggle.setColour(
+                juce::ToggleButton::ColourIds::textColourId,
+                juce::Colour::fromRGB(255, 255, 255)
+            );
+
+            _muteMVoiceToggle.repaint();
+        }
+        else if (_muteMVoiceToggle.getToggleState() && _bypassToggle.getToggleState())
+        {
+            _muteMVoiceToggle.setColour(
+                juce::ToggleButton::ColourIds::textColourId,
+                juce::Colour::fromRGB(255, 0, 40)
+            );
+
+            _muteMVoiceToggle.repaint();
+        }
+    };
+}
+
 #if DEBUG
 void TinTinEditor::setupGUI_DebugInspector()
 {
@@ -250,7 +304,7 @@ void TinTinEditor::setupGUI_DebugInspector()
         40
     );
 
-    inspectButton.onClick = [&]() -> void
+    inspectButton.onStateChange = [&]() -> void
     {
         if (!inspector)
         {
