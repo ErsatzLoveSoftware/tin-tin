@@ -57,18 +57,16 @@ void TinTinProcessor::processImpl(juce::MidiBuffer& outMidiBuffer)
         return;
     }
 
-    // :::::::::::::: Bypass :::::::::::::: 
-    if (_bypass)
-    {
-        return;
-    }
-
     // :::::::::::::: Apply T-Voice ::::::::::::::
     for (const juce::MidiMessageMetadata& midiMetadata : outMidiBuffer)
     {
         juce::MidiMessage mVoiceMidiMessage = midiMetadata.getMessage();
         MidiNote mVoiceNote = mVoiceMidiMessage.getNoteNumber();
-        _processedMidiBuffer.addEvent(mVoiceMidiMessage, midiMetadata.samplePosition);
+
+        if (!_shouldMuteMVoice)
+        {
+            _processedMidiBuffer.addEvent(mVoiceMidiMessage, midiMetadata.samplePosition);
+        }
 
         if (mVoiceMidiMessage.isNoteOff()) // Turn off voice pair.
         {
@@ -87,7 +85,11 @@ void TinTinProcessor::processImpl(juce::MidiBuffer& outMidiBuffer)
                     );
 
                     // TODO: Add logic to keep t voice held down if needed.
-                    _processedMidiBuffer.addEvent(mVoiceOffMessage, midiMetadata.samplePosition);
+                    if (!_shouldMuteMVoice)
+                    {
+                        _processedMidiBuffer.addEvent(mVoiceOffMessage, midiMetadata.samplePosition);
+                    }
+
                     _processedMidiBuffer.addEvent(tVoiceOffMessage, midiMetadata.samplePosition);
                 }
             }
@@ -111,6 +113,13 @@ void TinTinProcessor::processImpl(juce::MidiBuffer& outMidiBuffer)
 void TinTinProcessor::process(juce::MidiBuffer& outMidiBuffer)
 {
     _processedMidiBuffer.clear();
+
+    // :::::::::::::: Bypass :::::::::::::: 
+    if (_bypass)
+    {
+        return;
+    }
+
     processImpl(outMidiBuffer);
 
     outMidiBuffer.swapWith(_processedMidiBuffer); // Return.

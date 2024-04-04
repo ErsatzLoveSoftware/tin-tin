@@ -66,6 +66,11 @@ public:
     {
         _bypass = !_bypass;
     }
+    
+    inline void toggleMuteMVoice()
+    {
+        _shouldMuteMVoice = !_shouldMuteMVoice;
+    }
 
     void updateVoiceCacheMap(
         std::optional<wammy::audio_utils::ENote> triadRoot = std::nullopt,
@@ -107,6 +112,7 @@ private:
 
     bool _shouldPanic = false;
     bool _bypass = false;
+    bool _shouldMuteMVoice = false;
 
     std::uint32_t _globalVoiceTick{ 0 };
     std::uint32_t _directionTick{ 0 };

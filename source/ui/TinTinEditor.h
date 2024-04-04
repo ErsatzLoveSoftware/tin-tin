@@ -33,6 +33,7 @@ private:
     // UI components.
     TinTinButton _panicButton{ "panic!! :O" };
     juce::ToggleButton _bypassToggle{ "bypass" };
+    juce::ToggleButton _muteMVoiceToggle{ "mute m voice :x" };
     TinTinComboBox _triadRootSelector{ ""};
     TinTinComboBox _tVoiceDirectionSelector{""};
     TinTinComboBox _tVoicePositionSelector{""};
@@ -47,6 +48,7 @@ private:
     void setupTriadTypeComboBox();
     void setupTVoiceDirectionComboBox();
     void setupTVoicePositionComboBox();
+    void setupMVoiceMuteToggle();
 
 #if DEBUG
     std::unique_ptr<melatonin::Inspector> inspector;
