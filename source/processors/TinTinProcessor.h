@@ -129,9 +129,9 @@ private:
         juce::MidiMessage mVoiceMidiMessage;
         juce::MidiMessage tVoiceMidiMessage;
     };
-    
+
     std::vector<NoteOnPair> _noteOnMVoices{};
-    
+
 private:
     JUCE_NODISCARD Triad getSelectedTriad();
     JUCE_NODISCARD MidiNote resolveTVoice(MidiNote mVoice);

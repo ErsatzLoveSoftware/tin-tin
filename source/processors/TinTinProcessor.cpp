@@ -37,7 +37,7 @@ void TinTinProcessor::cacheNoteOnPair(NoteOnPair& noteOnPair)
 void TinTinProcessor::processImpl(juce::MidiBuffer& outMidiBuffer)
 {
     // :::::::::::::: Panic :::::::::::::: 
-    if (_shouldPanic) // TODO: Make this work.
+    if (_shouldPanic)
     {
         juce::MidiMessage offMidiMessage{};
         for (int channelNumber = 1; channelNumber < NUM_MIDI_CHANNELS; ++channelNumber)
@@ -224,9 +224,12 @@ MidiNote TinTinProcessor::resolveTVoice(MidiNote mVoice)
             continue;
         }
 
-        auto resolvePositionAndOctave = [&](const TinTinOctave& octave) -> MidiNote
+        auto resolvePositionAndOctave = [&](
+            const TinTinOctave& octave,
+            const IntervalPositionPair& positionPair
+        ) -> MidiNote
         {
-            MidiNote tVoice = mVoice + resolvedPosition(voiceCache.superiorVoice) +
+            MidiNote tVoice = mVoice + resolvedPosition(positionPair) +
                 (NUM_SEMI_TONES_IN_OCTAVE * static_cast<int>(octave.relativeOctave));
 
             if (octave.isStatic)
@@ -241,18 +244,19 @@ MidiNote TinTinProcessor::resolveTVoice(MidiNote mVoice)
         switch (tVoiceDirection)
         {
         case (ETinTinDirection::Superior):
-            return resolvePositionAndOctave(superiorOctave);
+            return resolvePositionAndOctave(superiorOctave, voiceCache.superiorVoice);
 
         case (ETinTinDirection::Inferior):
-            return resolvePositionAndOctave(inferiorOctave);
+            return resolvePositionAndOctave(inferiorOctave, voiceCache.inferiorVoices);
 
         case (ETinTinDirection::Alternating):
+            
             if (_directionTick % 2 == 0)
             {
-                return resolvePositionAndOctave(inferiorOctave);
+                return resolvePositionAndOctave(inferiorOctave, voiceCache.inferiorVoices);
             }
 
-            return resolvePositionAndOctave(superiorOctave);
+            return resolvePositionAndOctave(superiorOctave, voiceCache.superiorVoice);
         }
     }
 
