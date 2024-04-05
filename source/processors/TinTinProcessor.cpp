@@ -3,7 +3,7 @@
 #include "../NoteLogger.h"
 #include "../containers/Traid.h"
 
-/* Aliases */
+/* Aliases. */
 using namespace wammy::consts;
 using wammy::audio_utils::stringifyMidiNote;
 
@@ -49,7 +49,8 @@ void TinTinProcessor::processImpl(juce::MidiBuffer& outMidiBuffer)
                     noteNumber
                 );
 
-                _processedMidiBuffer.addEvent(offMidiMessage, 0);
+                constexpr int sampleNumber = 0;
+                _processedMidiBuffer.addEvent(offMidiMessage, sampleNumber);
             }
         }
 
@@ -68,23 +69,24 @@ void TinTinProcessor::processImpl(juce::MidiBuffer& outMidiBuffer)
             _processedMidiBuffer.addEvent(mVoiceMidiMessage, midiMetadata.samplePosition);
         }
 
-        if (mVoiceMidiMessage.isNoteOff()) // Turn off voice pair.
+        // :::::::::::::: Note Off ::::::::::::::
+        if (mVoiceMidiMessage.isNoteOff())
         {
             for (const NoteOnPair& noteOnPair : _noteOnMVoices)
             {
                 if (noteOnPair.mVoiceMidiMessage.getNoteNumber() == mVoiceNote)
                 {
-                    juce::MidiMessage mVoiceOffMessage = juce::MidiMessage::noteOff(
+                    // TODO: Add logic to keep t voice held down if needed.
+                    auto mVoiceOffMessage = juce::MidiMessage::noteOff(
                         noteOnPair.mVoiceMidiMessage.getChannel(),
                         noteOnPair.mVoiceMidiMessage.getNoteNumber()
                     );
 
-                    juce::MidiMessage tVoiceOffMessage = juce::MidiMessage::noteOff(
+                    auto tVoiceOffMessage = juce::MidiMessage::noteOff(
                         noteOnPair.tVoiceMidiMessage.getChannel(),
                         noteOnPair.tVoiceMidiMessage.getNoteNumber()
                     );
 
-                    // TODO: Add logic to keep t voice held down if needed.
                     if (!_shouldMuteMVoice)
                     {
                         _processedMidiBuffer.addEvent(mVoiceOffMessage, midiMetadata.samplePosition);
@@ -95,11 +97,13 @@ void TinTinProcessor::processImpl(juce::MidiBuffer& outMidiBuffer)
             }
         }
 
-        if (mVoiceMidiMessage.isNoteOn()) // Add t voice to out buffer.
+        // :::::::::::::: Note On ::::::::::::::
+        if (mVoiceMidiMessage.isNoteOn())
         {
             _tVoiceMidiMessage = mVoiceMidiMessage;
             MidiNote tVoiceNote = resolveTVoice(mVoiceNote);
             _tVoiceMidiMessage.setNoteNumber(tVoiceNote);
+            _tVoiceMidiMessage.setVelocity(_tVoiceVelocity);
 
             // TODO: Send note numbers to UI component via FIFO.
             _processedMidiBuffer.addEvent(_tVoiceMidiMessage, midiMetadata.samplePosition);
@@ -112,21 +116,18 @@ void TinTinProcessor::processImpl(juce::MidiBuffer& outMidiBuffer)
 
 void TinTinProcessor::process(juce::MidiBuffer& outMidiBuffer)
 {
-    _processedMidiBuffer.clear();
-
-    // :::::::::::::: Bypass :::::::::::::: 
     if (_bypass)
     {
         return;
     }
 
+    _processedMidiBuffer.clear();
     processImpl(outMidiBuffer);
-
-    outMidiBuffer.swapWith(_processedMidiBuffer); // Return.
+    outMidiBuffer.swapWith(_processedMidiBuffer);
 }
 
 void TinTinProcessor::updateVoiceCacheMap(
-    std::optional<wammy::audio_utils::ENote> triadRoot,
+    std::optional<ENote> triadRoot,
     std::optional<ETinTinTriadType> triadType
 )
 {
@@ -134,7 +135,7 @@ void TinTinProcessor::updateVoiceCacheMap(
     _triadType = triadType.has_value() ? triadType.value() : _triadType;
 
     _voiceCacheMap.clear();
-    const Triad triad = getSelectedTriad(); // TODO: Add to fifo buffer.
+    const Triad triad = getSelectedTriad(); // TODO: Add to FIFO buffer.
     selectedTriad = triad.stringify();
     for (MidiNote note = 0; note < NUM_SEMI_TONES_IN_OCTAVE; ++note)
     {
@@ -145,7 +146,9 @@ void TinTinProcessor::updateVoiceCacheMap(
         );
     }
 
+#if DEBUG
     wammy::logger::logVoiceCache(_voiceCacheMap); // TODO: Remove.
+#endif // DEBUG
 }
 
 IntervalPositionPair TinTinProcessor::computeSuperiorVoices(MidiNote note, const Triad& triad)
@@ -259,8 +262,7 @@ MidiNote TinTinProcessor::resolveTVoice(MidiNote mVoice)
             return resolvePositionAndOctave(inferiorOctave, voiceCache.inferiorVoices);
 
         case (ETinTinDirection::Alternating):
-            
-            if (_directionTick % 2 == 0)
+            if (_directionTick % 2 == 0) // TODO: add ticks here.
             {
                 return resolvePositionAndOctave(inferiorOctave, voiceCache.inferiorVoices);
             }
@@ -269,7 +271,7 @@ MidiNote TinTinProcessor::resolveTVoice(MidiNote mVoice)
         }
     }
 
-    juce::Logger::outputDebugString("Out of bounds from switch options..");
+    juce::Logger::outputDebugString("Out of bounds from switch options.");
 
     return -1; // Error.
 }
@@ -291,5 +293,7 @@ Triad TinTinProcessor::getSelectedTriad()
         return Triad::diminished(_triadRoot);
     }
 
+    juce::Logger::outputDebugString("Out of bounds from triad switch options.");
+    
     return Triad::emptyTriad(); // Error.
 }

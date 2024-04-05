@@ -34,21 +34,24 @@ private:
     TinTinButton _panicButton{ "panic!! :O" };
     juce::ToggleButton _bypassToggle{ "bypass" };
     juce::ToggleButton _muteMVoiceToggle{ "mute m voice :x" };
-    TinTinComboBox _triadRootSelector{ ""};
-    TinTinComboBox _tVoiceDirectionSelector{""};
-    TinTinComboBox _tVoicePositionSelector{""};
-    TinTinComboBox _triadSelector{""};
+    juce::Slider _tVoiceVelocitySlider{"T Voice Velocity"};
+    TinTinComboBox _triadRootSelector{"Scale Root Selector"};
+    TinTinComboBox _tVoiceDirectionSelector{"T Voice Direction"};
+    TinTinComboBox _tVoicePositionSelector{"T Voice Position"};
+    TinTinComboBox _triadSelector{"Triad"};
 
     TinTinOctaveComponent _octaveComponent{_processorRef};
     TinTinNoteDisplayComponent _noteDisplayComponent;
 
 private:
+    void setupBypassToggle();
     void setupPanicButton();
     void setupTriadRootComboBox();
     void setupTriadTypeComboBox();
     void setupTVoiceDirectionComboBox();
     void setupTVoicePositionComboBox();
     void setupMVoiceMuteToggle();
+    void setupTVoiceVelocitySlider();
 
 #if DEBUG
     std::unique_ptr<melatonin::Inspector> inspector;

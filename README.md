@@ -1,3 +1,6 @@
+build command.
+`cmake --build /Users/wammy/development/audio/tin-tin0.1/cmake-build-debug --target TinTin_AU -j 10`
+
 ![PAMPLEJUCE](assets/images/pamplejuce.png)
 [![](https://github.com/sudara/pamplejuce/workflows/Pamplejuce/badge.svg)](https://github.com/sudara/pamplejuce/actions)
 

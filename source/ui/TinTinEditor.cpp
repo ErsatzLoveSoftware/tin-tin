@@ -22,54 +22,19 @@ TinTinEditor::TinTinEditor(PluginProcessor& p) :
 
     auto bounds = getBounds(); // TODO: Use.
 
-    addAndMakeVisible(_bypassToggle);
-    constexpr int bypassPositionX = 370;
-    constexpr int bypassPositionY = 29;
-    constexpr int bypassWidth = 80;
-    constexpr int bypassHeight = 27;
-
-    _bypassToggle.setBounds(
-        bypassPositionX,
-        bypassPositionY,
-        bypassWidth,
-        bypassHeight
-    );
-
-    _bypassToggle.onClick = [&]() -> void
-    {
-        _processorRef.tinTinProcessor.toggleBypass();
-        
-        if (_bypassToggle.getToggleState() && _muteMVoiceToggle.getToggleState())
-        {
-            _muteMVoiceToggle.setColour(
-                juce::ToggleButton::ColourIds::textColourId,
-                juce::Colour::fromRGB(255, 0, 40)
-            );
-
-            _muteMVoiceToggle.repaint();
-        }
-        else
-        {
-            _muteMVoiceToggle.setColour(
-                juce::ToggleButton::ColourIds::textColourId,
-                juce::Colour::fromRGB(255, 255, 255)
-            );
-
-            _muteMVoiceToggle.repaint();
-        }
-    };
-
+    setupBypassToggle();
     setupPanicButton();
     setupTriadRootComboBox();
     setupTriadTypeComboBox();
     setupTVoiceDirectionComboBox();
     setupTVoicePositionComboBox();
     setupMVoiceMuteToggle();
+    setupTVoiceVelocitySlider();
 
     addAndMakeVisible(_octaveComponent);
     _octaveComponent.setBounds(140, 107, 300, 80);
 
-//    addAndMakeVisible(_noteDisplayComponent);
+//    addAndMakeVisible(_noteDisplayComponent); // TODO.
     _noteDisplayComponent.setTriad(_processorRef.tinTinProcessor.selectedTriad);
 
     setSize(tin_tin::editor_consts::WIDTH, tin_tin::editor_consts::HEIGHT);
@@ -132,6 +97,46 @@ void TinTinEditor::resized()
 #if DEBUG
     inspectButton.setBounds(getLocalBounds().withSizeKeepingCentre(100, 50));
 #endif // DEBUG
+}
+
+void TinTinEditor::setupBypassToggle()
+{
+    addAndMakeVisible(_bypassToggle);
+    constexpr int bypassPositionX = 370;
+    constexpr int bypassPositionY = 29;
+    constexpr int bypassWidth = 80;
+    constexpr int bypassHeight = 27;
+
+    _bypassToggle.setBounds(
+        bypassPositionX,
+        bypassPositionY,
+        bypassWidth,
+        bypassHeight
+    );
+
+    _bypassToggle.onClick = [&]() -> void
+    {
+        _processorRef.tinTinProcessor.toggleBypass();
+
+        if (_bypassToggle.getToggleState() && _muteMVoiceToggle.getToggleState())
+        {
+            _muteMVoiceToggle.setColour(
+                juce::ToggleButton::ColourIds::textColourId,
+                juce::Colour::fromRGB(255, 0, 40)
+            );
+
+            _muteMVoiceToggle.repaint();
+        }
+        else
+        {
+            _muteMVoiceToggle.setColour(
+                juce::ToggleButton::ColourIds::textColourId,
+                juce::Colour::fromRGB(255, 255, 255)
+            );
+
+            _muteMVoiceToggle.repaint();
+        }
+    };
 }
 
 void TinTinEditor::setupPanicButton()
@@ -290,6 +295,26 @@ void TinTinEditor::setupMVoiceMuteToggle()
 
             _muteMVoiceToggle.repaint();
         }
+    };
+}
+
+void TinTinEditor::setupTVoiceVelocitySlider()
+{
+    constexpr int selectorPositionX = 140 + PARENT_PADDING;
+    constexpr int selectorPositionY = 230;
+    constexpr int selectorWidth = 200;
+    constexpr int selectorHeight = 40;
+
+    addAndMakeVisible(_tVoiceVelocitySlider);
+    _tVoiceVelocitySlider.setBounds(selectorPositionX, selectorPositionY, selectorWidth, selectorHeight);
+    _tVoiceVelocitySlider.setRange(0, 1, 0.05);
+    _tVoiceVelocitySlider.setValue(tin_tin::defaults::tVoiceVelocity);
+
+    _tVoiceVelocitySlider.onValueChange = [&]() -> void
+    {
+        _processorRef.tinTinProcessor.updateTVoiceVelocity(
+            static_cast<float>(_tVoiceVelocitySlider.getValue())
+        );
     };
 }
 

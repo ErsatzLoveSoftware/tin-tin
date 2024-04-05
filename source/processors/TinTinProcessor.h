@@ -48,6 +48,7 @@ namespace tin_tin::defaults
     constexpr ETinTinTVoiceOctave tVoiceStaticOctave = ETinTinTVoiceOctave::Five;
     constexpr ETinTinDirection tVoiceDirection = ETinTinDirection::Superior;
     constexpr ETinTinPosition tVoicePosition = ETinTinPosition::FirstPosition;
+    constexpr float tVoiceVelocity = 0.5f;
 }
 
 class JUCE_API TinTinProcessor
@@ -70,6 +71,11 @@ public:
     inline void toggleMuteMVoice()
     {
         _shouldMuteMVoice = !_shouldMuteMVoice;
+    }
+    
+    void updateTVoiceVelocity(float velocity)
+    {
+        _tVoiceVelocity = velocity;
     }
 
     void updateVoiceCacheMap(
@@ -110,6 +116,7 @@ private:
     juce::MidiMessage _tVoiceMidiMessage{};
     juce::MidiMessage _newestMidiMessage{};
 
+    float _tVoiceVelocity = tin_tin::defaults::tVoiceVelocity;
     bool _shouldPanic = false;
     bool _bypass = false;
     bool _shouldMuteMVoice = false;
