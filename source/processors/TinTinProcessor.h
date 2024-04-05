@@ -49,6 +49,7 @@ namespace tin_tin::defaults
     constexpr ETinTinDirection tVoiceDirection = ETinTinDirection::Superior;
     constexpr ETinTinPosition tVoicePosition = ETinTinPosition::FirstPosition;
     constexpr float tVoiceVelocity = 0.5f;
+    constexpr int tVoiceMidiChannel = 1;
 }
 
 class JUCE_API TinTinProcessor
@@ -63,19 +64,21 @@ public:
         _shouldPanic = true;
     }
 
-    inline void toggleBypass()
-    {
-        _bypass = !_bypass;
-    }
+    inline void toggleBypass() { _bypass = !_bypass; }
     
-    inline void toggleMuteMVoice()
-    {
-        _shouldMuteMVoice = !_shouldMuteMVoice;
-    }
+    inline void toggleMuteMVoice() { _shouldMuteMVoice = !_shouldMuteMVoice; }
     
-    void updateTVoiceVelocity(float velocity)
+    void updateTVoiceVelocity(float velocity) { _tVoiceVelocity = velocity; }
+    
+    void updateTVoiceMidiChannel(const int midiChannel)
     {
-        _tVoiceVelocity = velocity;
+        if (midiChannel > 16)
+        {
+            std::cout << "TinTinProcessor: Invalid midi channel.";
+            return;
+        }
+        
+        _tVoiceMidiChannel = midiChannel;
     }
 
     void updateVoiceCacheMap(
@@ -90,9 +93,6 @@ public:
     JUCE_NODISCARD static IntervalPositionPair computeSuperiorVoices(MidiNote note, const Triad& triad);
 
 public:
-    // T-Voice relativeOctave controls.
-//    ETinTinTVoiceOctave inferiorOctave = tin_tin::defaults::tVoiceFollowingOctave;
-//    ETinTinTVoiceOctave superiorOctave = tin_tin::defaults::tVoiceFollowingOctave;
 
     TinTinOctave inferiorOctave;
     TinTinOctave superiorOctave;
@@ -116,10 +116,11 @@ private:
     juce::MidiMessage _tVoiceMidiMessage{};
     juce::MidiMessage _newestMidiMessage{};
 
+    int _tVoiceMidiChannel = tin_tin::defaults::tVoiceMidiChannel;
     float _tVoiceVelocity = tin_tin::defaults::tVoiceVelocity;
+    bool _shouldMuteMVoice = false;
     bool _shouldPanic = false;
     bool _bypass = false;
-    bool _shouldMuteMVoice = false;
 
     std::uint32_t _globalVoiceTick{ 0 };
     std::uint32_t _directionTick{ 0 };

@@ -104,6 +104,7 @@ void TinTinProcessor::processImpl(juce::MidiBuffer& outMidiBuffer)
             MidiNote tVoiceNote = resolveTVoice(mVoiceNote);
             _tVoiceMidiMessage.setNoteNumber(tVoiceNote);
             _tVoiceMidiMessage.setVelocity(_tVoiceVelocity);
+            _tVoiceMidiMessage.setChannel(_tVoiceMidiChannel);
 
             // TODO: Send note numbers to UI component via FIFO.
             _processedMidiBuffer.addEvent(_tVoiceMidiMessage, midiMetadata.samplePosition);

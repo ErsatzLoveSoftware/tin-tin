@@ -16,7 +16,7 @@ enum class ETinTinTVoiceOctave
     Six,
     Seven,
     Eight,
-    Nine,
+    Nine
 };
 
 struct IntervalPositionPair

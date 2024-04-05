@@ -30,6 +30,7 @@ TinTinEditor::TinTinEditor(PluginProcessor& p) :
     setupTVoicePositionComboBox();
     setupMVoiceMuteToggle();
     setupTVoiceVelocitySlider();
+    setupTMidiChannelSelector();
 
     addAndMakeVisible(_octaveComponent);
     _octaveComponent.setBounds(140, 107, 300, 80);
@@ -307,13 +308,47 @@ void TinTinEditor::setupTVoiceVelocitySlider()
 
     addAndMakeVisible(_tVoiceVelocitySlider);
     _tVoiceVelocitySlider.setBounds(selectorPositionX, selectorPositionY, selectorWidth, selectorHeight);
-    _tVoiceVelocitySlider.setRange(0, 1, 0.05);
+    _tVoiceVelocitySlider.setRange(0, 1, 0.1);
     _tVoiceVelocitySlider.setValue(tin_tin::defaults::tVoiceVelocity);
-
     _tVoiceVelocitySlider.onValueChange = [&]() -> void
     {
         _processorRef.tinTinProcessor.updateTVoiceVelocity(
             static_cast<float>(_tVoiceVelocitySlider.getValue())
+        );
+    };
+}
+
+void TinTinEditor::setupTMidiChannelSelector()
+{
+    addAndMakeVisible(_tVoiceMidiChannelSelector);
+    constexpr int selectorPositionX = 400 + PARENT_PADDING;
+    constexpr int selectorPositionY = 230;
+    constexpr int selectorWidth = 70;
+    constexpr int selectorHeight = 20;
+
+    addAndMakeVisible(_tVoiceMidiChannelSelector);
+    _tVoiceMidiChannelSelector.setBounds(selectorPositionX, selectorPositionY, selectorWidth, selectorHeight);
+    _tVoiceMidiChannelSelector.addItem("1", 1);
+    _tVoiceMidiChannelSelector.addItem("2", 2);
+    _tVoiceMidiChannelSelector.addItem("3", 3);
+    _tVoiceMidiChannelSelector.addItem("4", 4);
+    _tVoiceMidiChannelSelector.addItem("5", 5);
+    _tVoiceMidiChannelSelector.addItem("6", 6);
+    _tVoiceMidiChannelSelector.addItem("7", 7);
+    _tVoiceMidiChannelSelector.addItem("8", 8);
+    _tVoiceMidiChannelSelector.addItem("9", 9);
+    _tVoiceMidiChannelSelector.addItem("10", 10);
+    _tVoiceMidiChannelSelector.addItem("11", 11);
+    _tVoiceMidiChannelSelector.addItem("12", 12);
+    _tVoiceMidiChannelSelector.addItem("13", 13);
+    _tVoiceMidiChannelSelector.addItem("14", 14);
+    _tVoiceMidiChannelSelector.addItem("15", 15);
+    _tVoiceMidiChannelSelector.addItem("16", 16);
+    _tVoiceMidiChannelSelector.setSelectedId(tin_tin::defaults::tVoiceMidiChannel);
+    _tVoiceMidiChannelSelector.onChange = [&]() -> void
+    {
+        _processorRef.tinTinProcessor.updateTVoiceMidiChannel(
+            _tVoiceMidiChannelSelector.getSelectedId()
         );
     };
 }

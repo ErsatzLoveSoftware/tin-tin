@@ -95,6 +95,7 @@ private:
             );
         };
 
+        // TODO: This is not matching logics octaves!
         addAndMakeVisible(_staticOctaveSelector);
         _staticOctaveSelector.setVisible(false);
         _staticOctaveSelector.setBounds(selectorPositionX, selectorPositionY, selectorWidth, selectorHeight);

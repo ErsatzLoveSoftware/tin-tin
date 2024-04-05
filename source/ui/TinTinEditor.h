@@ -30,17 +30,23 @@ private:
     // Reference to audio/midi processor.
     PluginProcessor& _processorRef;
 
-    // UI components.
-    TinTinButton _panicButton{ "panic!! :O" };
+    // Master controls.
     juce::ToggleButton _bypassToggle{ "bypass" };
     juce::ToggleButton _muteMVoiceToggle{ "mute m voice :x" };
-    juce::Slider _tVoiceVelocitySlider{"T Voice Velocity"};
-    TinTinComboBox _triadRootSelector{"Scale Root Selector"};
-    TinTinComboBox _tVoiceDirectionSelector{"T Voice Direction"};
-    TinTinComboBox _tVoicePositionSelector{"T Voice Position"};
-    TinTinComboBox _triadSelector{"Triad"};
 
+    // tintin Controls.
+    TinTinComboBox _triadSelector{"triad"};
+    TinTinComboBox _triadRootSelector{"scale root selector"};
+    TinTinComboBox _tVoiceDirectionSelector{"t voice direction"};
+    TinTinComboBox _tVoicePositionSelector{"t voice position"};
     TinTinOctaveComponent _octaveComponent{_processorRef};
+
+    // Midi Controls.
+    TinTinButton _panicButton{ "panic!! :O" };
+    juce::Slider _tVoiceVelocitySlider{"t voice velocity"};
+    TinTinComboBox _tVoiceMidiChannelSelector{"midi channel"};
+    
+    // Displays
     TinTinNoteDisplayComponent _noteDisplayComponent;
 
 private:
@@ -52,6 +58,7 @@ private:
     void setupTVoicePositionComboBox();
     void setupMVoiceMuteToggle();
     void setupTVoiceVelocitySlider();
+    void setupTMidiChannelSelector();
 
 #if DEBUG
     std::unique_ptr<melatonin::Inspector> inspector;
