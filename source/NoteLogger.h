@@ -41,13 +41,13 @@ namespace wammy::logger
     static void logVoiceCache(const VoiceCacheMap& voiceMap)
     {
         std::cout << "Inferior Voices: \n";
-        for (const TinTinVoiceCache& voicePair : voiceMap)
+        for (const TinTinVoiceTable& voicePair : voiceMap)
         {
             logNotePair(voicePair.mVoice, voicePair.inferiorVoices);
         }
 
         std::cout << "\nSuperior Voices: \n";
-        for (const TinTinVoiceCache& voicePair : voiceMap)
+        for (const TinTinVoiceTable& voicePair : voiceMap)
         {
             logNotePair(voicePair.mVoice, voicePair.superiorVoice);
         }

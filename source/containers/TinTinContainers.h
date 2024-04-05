@@ -38,11 +38,11 @@ struct TinTinOctave
     bool isStatic = false; // TODO: Add to defaults.
 };
 
-struct TinTinVoiceCache
+struct TinTinVoiceTable
 {
-    TinTinVoiceCache() = delete;
+    TinTinVoiceTable() = delete;
 
-    TinTinVoiceCache(
+    TinTinVoiceTable(
         MidiNote inM_Voice,
         IntervalPositionPair&& inInferiorVoices,
         IntervalPositionPair&& inSuperiorVoices) :
@@ -58,4 +58,4 @@ struct TinTinVoiceCache
 };
 
 /* Aliases */
-using VoiceCacheMap = std::vector<TinTinVoiceCache>;
+using VoiceCacheMap = std::vector<TinTinVoiceTable>;

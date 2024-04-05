@@ -9,7 +9,7 @@ using wammy::audio_utils::stringifyMidiNote;
 
 TinTinProcessor::TinTinProcessor() noexcept
 {
-    _voiceCacheMap.reserve(NUM_SEMI_TONES_IN_OCTAVE);
+    _voiceTable.reserve(NUM_SEMI_TONES_IN_OCTAVE);
     _noteOnMVoices.reserve(INITIAL_M_VOICE_HELD_DOWN_CACHE_SIZE);
     updateVoiceCacheMap(
         tin_tin::defaults::triadRoot,
@@ -64,11 +64,6 @@ void TinTinProcessor::processImpl(juce::MidiBuffer& outMidiBuffer)
         juce::MidiMessage mVoiceMidiMessage = midiMetadata.getMessage();
         MidiNote mVoiceNote = mVoiceMidiMessage.getNoteNumber();
 
-        if (!_shouldMuteMVoice)
-        {
-            _processedMidiBuffer.addEvent(mVoiceMidiMessage, midiMetadata.samplePosition);
-        }
-
         // :::::::::::::: Note Off ::::::::::::::
         if (mVoiceMidiMessage.isNoteOff())
         {
@@ -100,6 +95,11 @@ void TinTinProcessor::processImpl(juce::MidiBuffer& outMidiBuffer)
         // :::::::::::::: Note On ::::::::::::::
         if (mVoiceMidiMessage.isNoteOn())
         {
+            if (!_shouldMuteMVoice)
+            {
+                _processedMidiBuffer.addEvent(mVoiceMidiMessage, midiMetadata.samplePosition);
+            }
+
             _tVoiceMidiMessage = mVoiceMidiMessage;
             MidiNote tVoiceNote = resolveTVoice(mVoiceNote);
             _tVoiceMidiMessage.setNoteNumber(tVoiceNote);
@@ -111,6 +111,7 @@ void TinTinProcessor::processImpl(juce::MidiBuffer& outMidiBuffer)
 
             NoteOnPair noteOnPair{ midiMetadata.samplePosition, mVoiceMidiMessage, _tVoiceMidiMessage };
             cacheNoteOnPair(noteOnPair);
+            _previousMVoiceMidiNote = mVoiceMidiMessage.getNoteNumber();
         }
     }
 }
@@ -135,12 +136,12 @@ void TinTinProcessor::updateVoiceCacheMap(
     _triadRoot = triadRoot.has_value() ? triadRoot.value() : _triadRoot;
     _triadType = triadType.has_value() ? triadType.value() : _triadType;
 
-    _voiceCacheMap.clear();
+    _voiceTable.clear();
     const Triad triad = getSelectedTriad(); // TODO: Add to FIFO buffer.
     selectedTriad = triad.stringify();
     for (MidiNote note = 0; note < NUM_SEMI_TONES_IN_OCTAVE; ++note)
     {
-        _voiceCacheMap.emplace_back(
+        _voiceTable.emplace_back(
             note,
             computeInferiorVoices(note, triad),
             computeSuperiorVoices(note, triad)
@@ -148,7 +149,7 @@ void TinTinProcessor::updateVoiceCacheMap(
     }
 
 #if DEBUG
-    wammy::logger::logVoiceCache(_voiceCacheMap); // TODO: Remove.
+    wammy::logger::logVoiceCache(_voiceTable); // TODO: Remove.
 #endif // DEBUG
 }
 
@@ -230,7 +231,7 @@ MidiInterval TinTinProcessor::resolvedPosition(IntervalPositionPair voiceInterva
 MidiNote TinTinProcessor::resolveTVoice(MidiNote mVoice)
 {
     MidiNote normalizedM_Voice = wammy::audio_utils::normalizeMidiNote(mVoice);
-    for (const TinTinVoiceCache& voiceCache : _voiceCacheMap)
+    for (const TinTinVoiceTable& voiceCache : _voiceTable)
     {
         if (normalizedM_Voice != voiceCache.mVoice)
         {
@@ -269,6 +270,16 @@ MidiNote TinTinProcessor::resolveTVoice(MidiNote mVoice)
             }
 
             return resolvePositionAndOctave(superiorOctave, voiceCache.superiorVoice);
+
+        case (ETinTinDirection::CounterMVoiceDirection):
+            if (mVoice - _previousMVoiceMidiNote > 0) // If positive direction is superior.
+            {
+                return resolvePositionAndOctave(superiorOctave, voiceCache.superiorVoice);
+            }
+            else // If negative direction is inferior.
+            {
+                return resolvePositionAndOctave(inferiorOctave, voiceCache.inferiorVoices);
+            }
         }
     }
 

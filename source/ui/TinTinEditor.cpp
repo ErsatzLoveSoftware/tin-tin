@@ -61,7 +61,7 @@ void TinTinEditor::paint(juce::Graphics& g)
     const auto directionLabelBounds = juce::Rectangle<int>(directionX, directionY, 60, 40);
     g.setFont(14.0f);
     g.drawText(
-        "Direction:",
+        "direction:",
         directionLabelBounds,
         juce::Justification::centred,
         false
@@ -72,7 +72,7 @@ void TinTinEditor::paint(juce::Graphics& g)
     const auto positionLabelBounds = juce::Rectangle<int>(positionX, positionY, 60, 40);
     g.setFont(14.0f);
     g.drawText(
-        "Position:",
+        "position:",
         positionLabelBounds,
         juce::Justification::centred,
         false
@@ -191,10 +191,10 @@ void TinTinEditor::setupTriadTypeComboBox()
 
     addAndMakeVisible(_triadSelector);
     _triadSelector.setBounds(selectorPositionX, selectorPositionY, selectorWidth, selectorHeight);
-    _triadSelector.addItem("Major", static_cast<int>(ETinTinTriadType::Major));
-    _triadSelector.addItem("Minor", static_cast<int>(ETinTinTriadType::Minor));
-    _triadSelector.addItem("Augmented", static_cast<int>(ETinTinTriadType::Augmented));
-    _triadSelector.addItem("Diminished", static_cast<int>(ETinTinTriadType::Diminished));
+    _triadSelector.addItem("major", static_cast<int>(ETinTinTriadType::Major));
+    _triadSelector.addItem("minor", static_cast<int>(ETinTinTriadType::Minor));
+    _triadSelector.addItem("augmented", static_cast<int>(ETinTinTriadType::Augmented));
+    _triadSelector.addItem("diminished", static_cast<int>(ETinTinTriadType::Diminished));
     _triadSelector.setSelectedId(static_cast<int>(tin_tin::defaults::triadType)); // Set default.
     _triadSelector.onChange = [&]() -> void
     {
@@ -210,14 +210,15 @@ void TinTinEditor::setupTVoiceDirectionComboBox()
 {
     constexpr int selectorPositionX = 0 + PARENT_PADDING;
     constexpr int selectorPositionY = 120;
-    constexpr int selectorWidth = 120;
+    constexpr int selectorWidth = 130;
     constexpr int selectorHeight = 20;
 
     addAndMakeVisible(_tVoiceDirectionSelector);
     _tVoiceDirectionSelector.setBounds(selectorPositionX, selectorPositionY, selectorWidth, selectorHeight);
-    _tVoiceDirectionSelector.addItem("Superior", static_cast<int>(ETinTinDirection::Superior));
-    _tVoiceDirectionSelector.addItem("Inferior", static_cast<int>(ETinTinDirection::Inferior));
-    _tVoiceDirectionSelector.addItem("Alternating", static_cast<int>(ETinTinDirection::Alternating));
+    _tVoiceDirectionSelector.addItem("superior", static_cast<int>(ETinTinDirection::Superior));
+    _tVoiceDirectionSelector.addItem("inferior", static_cast<int>(ETinTinDirection::Inferior));
+    _tVoiceDirectionSelector.addItem("alternating", static_cast<int>(ETinTinDirection::Alternating));
+    _tVoiceDirectionSelector.addItem("counter m voice", static_cast<int>(ETinTinDirection::CounterMVoiceDirection));
     _tVoiceDirectionSelector.setSelectedId(static_cast<int>(tin_tin::defaults::tVoiceDirection));
     _tVoiceDirectionSelector.onChange = [&]() -> void
     {
@@ -240,6 +241,11 @@ void TinTinEditor::setupTVoiceDirectionComboBox()
             _octaveComponent.setInferiorVoiceEnabled(true);
             _octaveComponent.setSuperiorVoiceEnabled(true);
             break;
+
+        case (ETinTinDirection::CounterMVoiceDirection):
+            _octaveComponent.setInferiorVoiceEnabled(true);
+            _octaveComponent.setSuperiorVoiceEnabled(true);
+            break;
         }
     };
 }
@@ -253,9 +259,9 @@ void TinTinEditor::setupTVoicePositionComboBox()
     
     addAndMakeVisible(_tVoicePositionSelector);
     _tVoicePositionSelector.setBounds(selectorPositionX, selectorPositionY, selectorWidth, selectorHeight);
-    _tVoicePositionSelector.addItem("First", static_cast<int>(ETinTinPosition::FirstPosition));
-    _tVoicePositionSelector.addItem("Second", static_cast<int>(ETinTinPosition::SecondPosition));
-    _tVoicePositionSelector.addItem("Alternating", static_cast<int>(ETinTinPosition::Alternating));
+    _tVoicePositionSelector.addItem("first", static_cast<int>(ETinTinPosition::FirstPosition));
+    _tVoicePositionSelector.addItem("second", static_cast<int>(ETinTinPosition::SecondPosition));
+    _tVoicePositionSelector.addItem("alternating", static_cast<int>(ETinTinPosition::Alternating));
     _tVoicePositionSelector.setSelectedId(static_cast<int>(tin_tin::defaults::tVoicePosition));
     _tVoicePositionSelector.onChange = [&]() -> void
     {
@@ -308,7 +314,7 @@ void TinTinEditor::setupTVoiceVelocitySlider()
 
     addAndMakeVisible(_tVoiceVelocitySlider);
     _tVoiceVelocitySlider.setBounds(selectorPositionX, selectorPositionY, selectorWidth, selectorHeight);
-    _tVoiceVelocitySlider.setRange(0, 1, 0.1);
+    _tVoiceVelocitySlider.setRange(0.f, 1.f, .01f);
     _tVoiceVelocitySlider.setValue(tin_tin::defaults::tVoiceVelocity);
     _tVoiceVelocitySlider.onValueChange = [&]() -> void
     {

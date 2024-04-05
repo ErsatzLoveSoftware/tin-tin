@@ -18,8 +18,8 @@ enum class ETinTinDirection
 {
     Superior = 1,
     Inferior,
-    Alternating
-    // TODO: CounterM_Voice
+    Alternating,
+     CounterMVoiceDirection
     // TODO: FollowM_Voice
 };
 
@@ -28,6 +28,8 @@ enum class ETinTinPosition
     FirstPosition = 1,
     SecondPosition,
     Alternating
+    // TODO: CounterM_Voice
+    // TODO: FollowM_Voice
 };
 
 enum class ETinTinTriadType
@@ -44,10 +46,10 @@ namespace tin_tin::defaults
 {
     constexpr wammy::audio_utils::ENote triadRoot = wammy::audio_utils::ENote::C;
     constexpr ETinTinTriadType triadType = ETinTinTriadType::Major;
-    constexpr ETinTinTVoiceOctave tVoiceFollowingOctave = ETinTinTVoiceOctave::Zero;
-    constexpr ETinTinTVoiceOctave tVoiceStaticOctave = ETinTinTVoiceOctave::Five;
     constexpr ETinTinDirection tVoiceDirection = ETinTinDirection::Superior;
     constexpr ETinTinPosition tVoicePosition = ETinTinPosition::FirstPosition;
+    constexpr ETinTinTVoiceOctave tVoiceFollowingOctave = ETinTinTVoiceOctave::Zero;
+    constexpr ETinTinTVoiceOctave tVoiceStaticOctave = ETinTinTVoiceOctave::Five;
     constexpr float tVoiceVelocity = 0.5f;
     constexpr int tVoiceMidiChannel = 1;
 }
@@ -67,12 +69,12 @@ public:
     inline void toggleBypass() { _bypass = !_bypass; }
     
     inline void toggleMuteMVoice() { _shouldMuteMVoice = !_shouldMuteMVoice; }
-    
-    void updateTVoiceVelocity(float velocity) { _tVoiceVelocity = velocity; }
-    
+
+    inline void updateTVoiceVelocity(float velocity) { _tVoiceVelocity = velocity; }
+
     void updateTVoiceMidiChannel(const int midiChannel)
     {
-        if (midiChannel > 16)
+        if (midiChannel > wammy::consts::NUM_MIDI_CHANNELS)
         {
             std::cout << "TinTinProcessor: Invalid midi channel.";
             return;
@@ -106,16 +108,17 @@ public:
 private:
     // Containers
     juce::MidiBuffer _processedMidiBuffer{};
-    VoiceCacheMap _voiceCacheMap{};
+    VoiceCacheMap _voiceTable{};
 
     // Options.
     wammy::audio_utils::ENote _triadRoot = tin_tin::defaults::triadRoot;
     ETinTinTriadType _triadType = tin_tin::defaults::triadType;
-
+    
     // Midi Messages.
     juce::MidiMessage _tVoiceMidiMessage{};
     juce::MidiMessage _newestMidiMessage{};
-
+    MidiNote _previousMVoiceMidiNote{};
+    
     int _tVoiceMidiChannel = tin_tin::defaults::tVoiceMidiChannel;
     float _tVoiceVelocity = tin_tin::defaults::tVoiceVelocity;
     bool _shouldMuteMVoice = false;
@@ -139,7 +142,7 @@ private:
         {
         }
 
-        int samplePosition{0};
+        int samplePosition;
         juce::MidiMessage mVoiceMidiMessage;
         juce::MidiMessage tVoiceMidiMessage;
     };
@@ -153,6 +156,6 @@ private:
 
     // TODO: Rename.
     void cacheNoteOnPair(NoteOnPair& noteOnPair);
-    
+
     void processImpl(juce::MidiBuffer& outMidiBuffer);
 };
