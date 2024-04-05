@@ -66,9 +66,9 @@ private:
     juce::String _label;
 
     // Octave selector.
-    TinTinComboBox _relativeOctaveSelector{ "Relative Octave Selector"};
-    TinTinComboBox _staticOctaveSelector{ "Static Octave Selector"};
-    juce::ToggleButton _makeStaticToggle{ "Make Static"};
+    TinTinComboBox _relativeOctaveSelector{ "relative octave selector" };
+    TinTinComboBox _staticOctaveSelector{ "static octave selector" };
+    juce::ToggleButton _makeStaticToggle{ "make static" };
 
 private:
     void setupComboBoxes()
@@ -189,7 +189,7 @@ public:
 
 private:
     PluginProcessor& _processorRef;
-    OctaveComponent _sVoiceOctaveComponent{ _processorRef, _processorRef.tinTinProcessor.superiorOctave, "S-Voice:"};
-    OctaveComponent _iVoiceOctaveComponent{ _processorRef, _processorRef.tinTinProcessor.inferiorOctave, "I-Voice:"};
+    OctaveComponent _sVoiceOctaveComponent{ _processorRef, _processorRef.tinTinProcessor.superiorOctave, "s voice:"};
+    OctaveComponent _iVoiceOctaveComponent{ _processorRef, _processorRef.tinTinProcessor.inferiorOctave, "i voice:"};
 };
 

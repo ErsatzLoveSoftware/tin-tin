@@ -19,8 +19,8 @@ enum class ETinTinDirection
     Superior = 1,
     Inferior,
     Alternating,
-     CounterMVoiceDirection
-    // TODO: FollowM_Voice
+    FollowMVoiceDirection,
+    CounterMVoiceDirection
 };
 
 enum class ETinTinPosition
@@ -117,7 +117,7 @@ private:
     // Midi Messages.
     juce::MidiMessage _tVoiceMidiMessage{};
     juce::MidiMessage _newestMidiMessage{};
-    MidiNote _previousMVoiceMidiNote{};
+    MidiNote _previousMVoiceMidiNote{ 0 };
     
     int _tVoiceMidiChannel = tin_tin::defaults::tVoiceMidiChannel;
     float _tVoiceVelocity = tin_tin::defaults::tVoiceVelocity;

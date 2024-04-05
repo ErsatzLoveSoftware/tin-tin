@@ -218,6 +218,7 @@ void TinTinEditor::setupTVoiceDirectionComboBox()
     _tVoiceDirectionSelector.addItem("superior", static_cast<int>(ETinTinDirection::Superior));
     _tVoiceDirectionSelector.addItem("inferior", static_cast<int>(ETinTinDirection::Inferior));
     _tVoiceDirectionSelector.addItem("alternating", static_cast<int>(ETinTinDirection::Alternating));
+    _tVoiceDirectionSelector.addItem("follow m voice", static_cast<int>(ETinTinDirection::FollowMVoiceDirection));
     _tVoiceDirectionSelector.addItem("counter m voice", static_cast<int>(ETinTinDirection::CounterMVoiceDirection));
     _tVoiceDirectionSelector.setSelectedId(static_cast<int>(tin_tin::defaults::tVoiceDirection));
     _tVoiceDirectionSelector.onChange = [&]() -> void
@@ -242,6 +243,11 @@ void TinTinEditor::setupTVoiceDirectionComboBox()
             _octaveComponent.setSuperiorVoiceEnabled(true);
             break;
 
+        case (ETinTinDirection::FollowMVoiceDirection):
+            _octaveComponent.setInferiorVoiceEnabled(true);
+            _octaveComponent.setSuperiorVoiceEnabled(true);
+            break;
+            
         case (ETinTinDirection::CounterMVoiceDirection):
             _octaveComponent.setInferiorVoiceEnabled(true);
             _octaveComponent.setSuperiorVoiceEnabled(true);

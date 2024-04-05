@@ -271,15 +271,43 @@ MidiNote TinTinProcessor::resolveTVoice(MidiNote mVoice)
 
             return resolvePositionAndOctave(superiorOctave, voiceCache.superiorVoice);
 
+        case (ETinTinDirection::FollowMVoiceDirection):
+            static MidiNote lastFollowTVoice{};
+            
+            if (mVoice == _previousMVoiceMidiNote)
+            {
+                return lastFollowTVoice;
+            }
+            
+            if (mVoice - _previousMVoiceMidiNote > 0)
+            {
+                lastFollowTVoice = resolvePositionAndOctave(superiorOctave, voiceCache.superiorVoice); 
+            }
+            else
+            {
+                lastFollowTVoice = resolvePositionAndOctave(inferiorOctave, voiceCache.inferiorVoices);
+            }
+            
+            return lastFollowTVoice;
+
         case (ETinTinDirection::CounterMVoiceDirection):
-            if (mVoice - _previousMVoiceMidiNote > 0) // If positive direction is superior.
+            static MidiNote lastCounterTVoice{};
+
+            if (mVoice == _previousMVoiceMidiNote)
             {
-                return resolvePositionAndOctave(superiorOctave, voiceCache.superiorVoice);
+                return lastCounterTVoice;
             }
-            else // If negative direction is inferior.
+            
+            if (mVoice - _previousMVoiceMidiNote < 0)
             {
-                return resolvePositionAndOctave(inferiorOctave, voiceCache.inferiorVoices);
+                lastCounterTVoice = resolvePositionAndOctave(superiorOctave, voiceCache.superiorVoice);
             }
+            else
+            {
+                lastCounterTVoice = resolvePositionAndOctave(inferiorOctave, voiceCache.inferiorVoices);
+            }
+
+            return lastCounterTVoice;
         }
     }
 
