@@ -139,7 +139,7 @@ private:
     std::vector<NoteOnPair> _noteOnMVoices{};
 
 private:
-    JUCE_NODISCARD Triad getSelectedTriad();
+    JUCE_NODISCARD Triad createSelectedTriad();
     JUCE_NODISCARD MidiNote resolveTVoice(MidiNote mVoice);
     JUCE_NODISCARD MidiInterval resolvedPosition(IntervalPositionPair voiceIntervalPair) const;
 

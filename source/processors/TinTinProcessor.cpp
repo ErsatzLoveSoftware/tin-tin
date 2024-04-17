@@ -62,7 +62,6 @@ void TinTinProcessor::processImpl(juce::MidiBuffer& outMidiBuffer)
     {
         juce::MidiMessage mVoiceMidiMessage = midiMetadata.getMessage();
         MidiNote mVoiceNote = mVoiceMidiMessage.getNoteNumber();
-
         if (!_shouldMuteMVoice)
         {
             _processedMidiBuffer.addEvent(mVoiceMidiMessage, midiMetadata.samplePosition);
@@ -134,7 +133,7 @@ void TinTinProcessor::updateVoiceCacheMap(
     _triadType = triadType.has_value() ? triadType.value() : _triadType;
 
     _voiceCacheMap.clear();
-    const Triad triad = getSelectedTriad(); // TODO: Add to fifo buffer.
+    const Triad triad = createSelectedTriad(); // TODO: Add to fifo buffer.
     selectedTriad = triad.stringify();
     for (MidiNote note = 0; note < NUM_SEMI_TONES_IN_OCTAVE; ++note)
     {
@@ -274,7 +273,7 @@ MidiNote TinTinProcessor::resolveTVoice(MidiNote mVoice)
     return -1; // Error.
 }
 
-Triad TinTinProcessor::getSelectedTriad()
+Triad TinTinProcessor::createSelectedTriad()
 {
     switch (_triadType)
     {
