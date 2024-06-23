@@ -11,7 +11,7 @@
 
 namespace octave_consts
 {
-    constexpr int padding = 10;
+    constexpr int PADDING = 10;
 }
 
 class OctaveComponent final : public juce::Component
@@ -19,6 +19,8 @@ class OctaveComponent final : public juce::Component
 public:
     static constexpr int OCTAVE_COMPONENT_WIDTH = 232;
     static constexpr int OCTAVE_COMPONENT_HEIGHT = 35;
+    
+    OctaveComponent() = delete;
 
     explicit OctaveComponent(
         PluginProcessor& processorRef,
@@ -41,8 +43,8 @@ public:
         g.setColour(juce::Colours::white);
         g.setFont(13.0f);
 
-        constexpr int selectorPositionX = octave_consts::padding + 12;
-        constexpr int selectorPositionY = octave_consts::padding + 2;
+        constexpr int selectorPositionX = octave_consts::PADDING + 12;
+        constexpr int selectorPositionY = octave_consts::PADDING + 2;
         constexpr int selectorWidth = 70;
         constexpr int selectorHeight = 18;
         const auto labelBounds = juce::Rectangle<int>(
@@ -61,8 +63,8 @@ public:
     }
 
 private:
-    PluginProcessor& _processorRef;
-    TinTinOctave& _octaveRef; // TODO Maybe rename TinTinOctave.
+    [[maybe_unused]] PluginProcessor& _processorRef;
+    TinTinOctave& _octaveRef;
     juce::String _label;
 
     // Octave selector.
@@ -73,8 +75,8 @@ private:
 private:
     void setupComboBoxes()
     {
-        constexpr int selectorPositionX = octave_consts::padding + 60;
-        constexpr int selectorPositionY = octave_consts::padding + 2;
+        constexpr int selectorPositionX = octave_consts::PADDING + 60;
+        constexpr int selectorPositionY = octave_consts::PADDING + 2;
         constexpr int selectorWidth = 59;
         constexpr int selectorHeight = 18;
 
@@ -121,8 +123,8 @@ private:
     void setupMakeStaticToggle()
     {
         addAndMakeVisible(_makeStaticToggle);
-        constexpr int positionX = octave_consts::padding + 120;
-        constexpr int positionY = octave_consts::padding - 4;
+        constexpr int positionX = octave_consts::PADDING + 120;
+        constexpr int positionY = octave_consts::PADDING - 4;
         constexpr int width = 100;
         constexpr int height = 30;
 
@@ -154,6 +156,10 @@ private:
 class TinTinOctaveComponent final : public juce::Component
 {
 public:
+    TinTinOctaveComponent() = delete;
+    
+    ~TinTinOctaveComponent() override = default;
+    
     explicit TinTinOctaveComponent(PluginProcessor& processor, int xPosition = 0, int yPosition = 0) :
         _processorRef(processor)
     {
@@ -174,8 +180,6 @@ public:
         _sVoiceOctaveComponent.setBounds(0, 0, width, height);
         _iVoiceOctaveComponent.setBounds(0, height, width, height);
     }
-
-    ~TinTinOctaveComponent() override = default;
 
     inline void setInferiorVoiceEnabled(bool isEnabled)
     {

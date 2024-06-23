@@ -22,6 +22,24 @@ TinTinProcessor::~TinTinProcessor() noexcept
     _processedMidiBuffer.clear();
 }
 
+void TinTinProcessor::resetProcessedMidiBuffer ()
+{
+    juce::MidiMessage offMidiMessage{};
+    for (int channelNumber = 1; channelNumber < NUM_MIDI_CHANNELS; ++channelNumber)
+    {
+        for (int noteNumber = 0; noteNumber < NUM_MIDI_NOTES; ++noteNumber)
+        {
+            offMidiMessage = juce::MidiMessage::noteOff(
+                channelNumber,
+                noteNumber
+            );
+            
+            constexpr int sampleNumber = 0;
+            _processedMidiBuffer.addEvent(offMidiMessage, sampleNumber);
+        }
+    }
+}
+
 // TODO: Rename.
 void TinTinProcessor::cacheNoteOnPair(NoteOnPair& noteOnPair)
 {
@@ -39,21 +57,7 @@ void TinTinProcessor::processImpl(juce::MidiBuffer& outMidiBuffer)
     // :::::::::::::: Panic :::::::::::::: 
     if (_shouldPanic)
     {
-        juce::MidiMessage offMidiMessage{};
-        for (int channelNumber = 1; channelNumber < NUM_MIDI_CHANNELS; ++channelNumber)
-        {
-            for (int noteNumber = 0; noteNumber < NUM_MIDI_NOTES; ++noteNumber)
-            {
-                offMidiMessage = juce::MidiMessage::noteOff(
-                    channelNumber,
-                    noteNumber
-                );
-
-                constexpr int sampleNumber = 0;
-                _processedMidiBuffer.addEvent(offMidiMessage, sampleNumber);
-            }
-        }
-
+        resetProcessedMidiBuffer();
         _shouldPanic = false;
         return;
     }
@@ -70,14 +74,14 @@ void TinTinProcessor::processImpl(juce::MidiBuffer& outMidiBuffer)
             for (const NoteOnPair& noteOnPair : _noteOnMVoices)
             {
                 if (noteOnPair.mVoiceMidiMessage.getNoteNumber() == mVoiceNote)
-                {
+                { 
                     // TODO: Add logic to keep t voice held down if needed.
-                    auto mVoiceOffMessage = juce::MidiMessage::noteOff(
+                    const auto mVoiceOffMessage = juce::MidiMessage::noteOff(
                         noteOnPair.mVoiceMidiMessage.getChannel(),
                         noteOnPair.mVoiceMidiMessage.getNoteNumber()
                     );
 
-                    auto tVoiceOffMessage = juce::MidiMessage::noteOff(
+                    const auto tVoiceOffMessage = juce::MidiMessage::noteOff(
                         noteOnPair.tVoiceMidiMessage.getChannel(),
                         noteOnPair.tVoiceMidiMessage.getNoteNumber()
                     );
@@ -91,15 +95,15 @@ void TinTinProcessor::processImpl(juce::MidiBuffer& outMidiBuffer)
                 }
             }
         }
-
-        // :::::::::::::: Note On ::::::::::::::
+        
         if (mVoiceMidiMessage.isNoteOn())
         {
+            // :::::::::::::: Note On ::::::::::::::
             if (!_shouldMuteMVoice)
             {
                 _processedMidiBuffer.addEvent(mVoiceMidiMessage, midiMetadata.samplePosition);
             }
-
+            
             _tVoiceMidiMessage = mVoiceMidiMessage;
             MidiNote tVoiceNote = resolveTVoice(mVoiceNote);
             _tVoiceMidiMessage.setNoteNumber(tVoiceNote);
@@ -149,7 +153,7 @@ void TinTinProcessor::updateVoiceCacheMap(
     }
 
 #if DEBUG
-    wammy::logger::logVoiceCache(_voiceTable); // TODO: Remove.
+    wammy::logger::logVoiceCache(_voiceTable);
 #endif // DEBUG
 }
 
@@ -212,15 +216,15 @@ MidiInterval TinTinProcessor::resolvedPosition(IntervalPositionPair voiceInterva
     switch (tVoicePosition)
     {
     case (ETinTinPosition::FirstPosition):
-        return voiceIntervalPair.firstPosition;
+        return voiceIntervalPair.first;
 
     case (ETinTinPosition::SecondPosition):
-        return voiceIntervalPair.secondPosition;
+        return voiceIntervalPair.second;
 
     case (ETinTinPosition::Alternating):
         return _positionTick % 2 == 0 ?
-               voiceIntervalPair.firstPosition :
-               voiceIntervalPair.secondPosition;
+               voiceIntervalPair.first :
+               voiceIntervalPair.second;
     }
 
     juce::Logger::outputDebugString("tVoicePosition is out of bounds of ETinTinPosition options.");
@@ -228,83 +232,80 @@ MidiInterval TinTinProcessor::resolvedPosition(IntervalPositionPair voiceInterva
     return -1111; // Error.
 }
 
+MidiNote TinTinProcessor::resolvePositionAndOctave(
+    MidiNote mVoice,
+    const TinTinOctave& octave,
+    const IntervalPositionPair& positionPair
+)
+{
+    MidiNote tVoice = mVoice + resolvedPosition(positionPair) +
+                      (NUM_SEMI_TONES_IN_OCTAVE * static_cast<int>(octave.relativeOctave));
+
+    if (octave.isStatic)
+    {
+        return wammy::audio_utils::normalizeMidiNote(tVoice) +
+               (NUM_SEMI_TONES_IN_OCTAVE * static_cast<int>(octave.staticOctave));
+    }
+
+    return tVoice;
+}
+
 MidiNote TinTinProcessor::resolveTVoice(MidiNote mVoice)
 {
-    MidiNote normalizedM_Voice = wammy::audio_utils::normalizeMidiNote(mVoice);
+    MidiNote normalizedMVoice = wammy::audio_utils::normalizeMidiNote(mVoice);
     for (const TinTinVoiceTable& voiceCache : _voiceTable)
     {
-        if (normalizedM_Voice != voiceCache.mVoice)
+        if (normalizedMVoice != voiceCache.mVoice)
         {
             continue;
         }
 
-        auto resolvePositionAndOctave = [&](
-            const TinTinOctave& octave,
-            const IntervalPositionPair& positionPair
-        ) -> MidiNote
-        {
-            MidiNote tVoice = mVoice + resolvedPosition(positionPair) +
-                (NUM_SEMI_TONES_IN_OCTAVE * static_cast<int>(octave.relativeOctave));
-
-            if (octave.isStatic)
-            {
-                return wammy::audio_utils::normalizeMidiNote(tVoice) +
-                    (NUM_SEMI_TONES_IN_OCTAVE * static_cast<int>(octave.staticOctave));
-            }
-
-            return tVoice;
-        };
-
         switch (tVoiceDirection)
         {
         case (ETinTinDirection::Superior):
-            return resolvePositionAndOctave(superiorOctave, voiceCache.superiorVoice);
+            return resolvePositionAndOctave(mVoice, superiorOctave, voiceCache.superiorVoice);
 
         case (ETinTinDirection::Inferior):
-            return resolvePositionAndOctave(inferiorOctave, voiceCache.inferiorVoices);
+            return resolvePositionAndOctave(mVoice, inferiorOctave, voiceCache.inferiorVoices);
 
         case (ETinTinDirection::Alternating):
-            if (_directionTick % 2 == 0) // TODO: add ticks here.
+            if (_directionTick % 2 == 0)
             {
-                return resolvePositionAndOctave(inferiorOctave, voiceCache.inferiorVoices);
+                return resolvePositionAndOctave(mVoice, inferiorOctave, voiceCache.inferiorVoices);
             }
 
-            return resolvePositionAndOctave(superiorOctave, voiceCache.superiorVoice);
+            return resolvePositionAndOctave(mVoice, superiorOctave, voiceCache.superiorVoice);
 
         case (ETinTinDirection::FollowMVoiceDirection):
-            static MidiNote lastFollowTVoice{};
-            
             if (mVoice == _previousMVoiceMidiNote)
             {
                 return lastFollowTVoice;
             }
             
-            if (mVoice - _previousMVoiceMidiNote > 0)
+            if ((mVoice - _previousMVoiceMidiNote) > 0)
             {
-                lastFollowTVoice = resolvePositionAndOctave(superiorOctave, voiceCache.superiorVoice); 
+                lastFollowTVoice = resolvePositionAndOctave(mVoice, superiorOctave, voiceCache.superiorVoice); 
             }
             else
             {
-                lastFollowTVoice = resolvePositionAndOctave(inferiorOctave, voiceCache.inferiorVoices);
+                lastFollowTVoice = resolvePositionAndOctave(mVoice, inferiorOctave, voiceCache.inferiorVoices);
             }
             
             return lastFollowTVoice;
 
         case (ETinTinDirection::CounterMVoiceDirection):
-            static MidiNote lastCounterTVoice{};
-
             if (mVoice == _previousMVoiceMidiNote)
             {
                 return lastCounterTVoice;
             }
             
-            if (mVoice - _previousMVoiceMidiNote < 0)
+            if ((mVoice - _previousMVoiceMidiNote) < 0)
             {
-                lastCounterTVoice = resolvePositionAndOctave(superiorOctave, voiceCache.superiorVoice);
+                lastCounterTVoice = resolvePositionAndOctave(mVoice, superiorOctave, voiceCache.superiorVoice);
             }
             else
             {
-                lastCounterTVoice = resolvePositionAndOctave(inferiorOctave, voiceCache.inferiorVoices);
+                lastCounterTVoice = resolvePositionAndOctave(mVoice, inferiorOctave, voiceCache.inferiorVoices);
             }
 
             return lastCounterTVoice;

@@ -10,8 +10,6 @@ namespace tin_tin::editor_consts
     constexpr int PARENT_PADDING = 20;
 }
 
-using namespace tin_tin::editor_consts;
-
 TinTinEditor::TinTinEditor(PluginProcessor& p) :
     AudioProcessorEditor(&p),
     _processorRef(p)
@@ -20,7 +18,7 @@ TinTinEditor::TinTinEditor(PluginProcessor& p) :
 //    setupGUI_DebugInspector();
 #endif // DEBUG
 
-    auto bounds = getBounds(); // TODO: Use.
+    [[maybe_unused]] juce::Rectangle<int> bounds = getBounds(); // TODO: Use.
 
     setupBypassToggle();
     setupPanicButton();
@@ -56,7 +54,7 @@ void TinTinEditor::paint(juce::Graphics& g)
         false
     );
 
-    constexpr int directionX = 0 + PARENT_PADDING;
+    constexpr int directionX = 0 + tin_tin::editor_consts::PARENT_PADDING;
     constexpr int directionY = 88;
     const auto directionLabelBounds = juce::Rectangle<int>(directionX, directionY, 60, 40);
     g.setFont(14.0f);
@@ -67,7 +65,7 @@ void TinTinEditor::paint(juce::Graphics& g)
         false
     );
 
-    constexpr int positionX = 0 + PARENT_PADDING;
+    constexpr int positionX = 0 + tin_tin::editor_consts::PARENT_PADDING;
     constexpr int positionY = 143;
     const auto positionLabelBounds = juce::Rectangle<int>(positionX, positionY, 60, 40);
     g.setFont(14.0f);
@@ -88,10 +86,10 @@ void TinTinEditor::resized()
 {
     auto bounds = getLocalBounds();
 
-    bounds.removeFromBottom(PARENT_PADDING);
-    bounds.removeFromTop(PARENT_PADDING);
-    bounds.removeFromRight(PARENT_PADDING);
-    bounds.removeFromLeft(PARENT_PADDING);
+    bounds.removeFromBottom(tin_tin::editor_consts::PARENT_PADDING);
+    bounds.removeFromTop(tin_tin::editor_consts::PARENT_PADDING);
+    bounds.removeFromRight(tin_tin::editor_consts::PARENT_PADDING);
+    bounds.removeFromLeft(tin_tin::editor_consts::PARENT_PADDING);
 
     _panicButton.setBounds(bounds.removeFromRight(80).removeFromTop(40));
 
@@ -159,7 +157,7 @@ void TinTinEditor::setupTriadRootComboBox()
 {
     constexpr int selectorWidth = 60;
     constexpr int selectorHeight = 20;
-    constexpr int selectorPositionX = 0 + PARENT_PADDING;
+    constexpr int selectorPositionX = 0 + tin_tin::editor_consts::PARENT_PADDING;
     constexpr int selectorPositionY = 65;
 
     addAndMakeVisible(_triadRootSelector);
@@ -186,7 +184,7 @@ void TinTinEditor::setupTriadTypeComboBox()
 {
     constexpr int selectorWidth = 118;
     constexpr int selectorHeight = 20;
-    constexpr int selectorPositionX = 0 + PARENT_PADDING;
+    constexpr int selectorPositionX = 0 + tin_tin::editor_consts::PARENT_PADDING;
     constexpr int selectorPositionY = 35;
 
     addAndMakeVisible(_triadSelector);
@@ -208,7 +206,7 @@ void TinTinEditor::setupTriadTypeComboBox()
 
 void TinTinEditor::setupTVoiceDirectionComboBox()
 {
-    constexpr int selectorPositionX = 0 + PARENT_PADDING;
+    constexpr int selectorPositionX = 0 + tin_tin::editor_consts::PARENT_PADDING;
     constexpr int selectorPositionY = 120;
     constexpr int selectorWidth = 130;
     constexpr int selectorHeight = 20;
@@ -239,15 +237,7 @@ void TinTinEditor::setupTVoiceDirectionComboBox()
             break;
 
         case (ETinTinDirection::Alternating):
-            _octaveComponent.setInferiorVoiceEnabled(true);
-            _octaveComponent.setSuperiorVoiceEnabled(true);
-            break;
-
         case (ETinTinDirection::FollowMVoiceDirection):
-            _octaveComponent.setInferiorVoiceEnabled(true);
-            _octaveComponent.setSuperiorVoiceEnabled(true);
-            break;
-            
         case (ETinTinDirection::CounterMVoiceDirection):
             _octaveComponent.setInferiorVoiceEnabled(true);
             _octaveComponent.setSuperiorVoiceEnabled(true);
@@ -258,7 +248,7 @@ void TinTinEditor::setupTVoiceDirectionComboBox()
 
 void TinTinEditor::setupTVoicePositionComboBox()
 {
-    constexpr int selectorPositionX = 0 + PARENT_PADDING;
+    constexpr int selectorPositionX = 0 + tin_tin::editor_consts::PARENT_PADDING;
     constexpr int selectorPositionY = 174;
     constexpr int selectorWidth = 120;
     constexpr int selectorHeight = 20;
@@ -279,7 +269,7 @@ void TinTinEditor::setupTVoicePositionComboBox()
 
 void TinTinEditor::setupMVoiceMuteToggle()
 {
-    constexpr int selectorPositionX = 140 + PARENT_PADDING;
+    constexpr int selectorPositionX = 140 + tin_tin::editor_consts::PARENT_PADDING;
     constexpr int selectorPositionY = 190;
     constexpr int selectorWidth = 200;
     constexpr int selectorHeight = 20;
@@ -313,7 +303,7 @@ void TinTinEditor::setupMVoiceMuteToggle()
 
 void TinTinEditor::setupTVoiceVelocitySlider()
 {
-    constexpr int selectorPositionX = 140 + PARENT_PADDING;
+    constexpr int selectorPositionX = 140 + tin_tin::editor_consts::PARENT_PADDING;
     constexpr int selectorPositionY = 230;
     constexpr int selectorWidth = 200;
     constexpr int selectorHeight = 40;
@@ -333,7 +323,7 @@ void TinTinEditor::setupTVoiceVelocitySlider()
 void TinTinEditor::setupTMidiChannelSelector()
 {
     addAndMakeVisible(_tVoiceMidiChannelSelector);
-    constexpr int selectorPositionX = 400 + PARENT_PADDING;
+    constexpr int selectorPositionX = 400 + tin_tin::editor_consts::PARENT_PADDING;
     constexpr int selectorPositionY = 230;
     constexpr int selectorWidth = 70;
     constexpr int selectorHeight = 20;
@@ -366,7 +356,7 @@ void TinTinEditor::setupTMidiChannelSelector()
 }
 
 #if DEBUG
-void TinTinEditor::setupGUI_DebugInspector()
+[[maybe_unused]] void TinTinEditor::setupGUI_DebugInspector()
 {
     addAndMakeVisible(inspectButton);
     inspectButton.setBounds(

@@ -70,7 +70,7 @@ namespace melatonin
             // the JUCE widget is unfriendly for theming, so indenting is also manually handled
             tree.setIndentSize (12);
 
-            // JUCE makes it impossible to add any vertical padding within the viewport
+            // JUCE makes it impossible to add any vertical PADDING within the viewport
             tree.getViewport()->setViewPosition (0, 0);
             tree.getViewport()->setScrollBarThickness (20);
 

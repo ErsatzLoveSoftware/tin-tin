@@ -10,18 +10,17 @@
 #include "TinTInNoteDisplayComponent.h"
 
 #if DEBUG
-#include "melatonin_inspector/melatonin_inspector.h"
-#include "TinTinOctaveComponent.h"
+    #include "melatonin_inspector/melatonin_inspector.h"
+    #include "TinTinOctaveComponent.h"
 #endif // DEBUG
 
-class TinTinEditor final :
-    public juce::AudioProcessorEditor
+class TinTinEditor final : public juce::AudioProcessorEditor
 {
 public:
     explicit TinTinEditor(PluginProcessor&);
 
     ~TinTinEditor() override = default;
-
+    
     void paint(juce::Graphics& g) override;
 
     void resized() override;
@@ -49,7 +48,6 @@ private:
     // Displays
     TinTinNoteDisplayComponent _noteDisplayComponent;
 
-private:
     void setupBypassToggle();
     void setupPanicButton();
     void setupTriadRootComboBox();
@@ -63,7 +61,7 @@ private:
 #if DEBUG
     std::unique_ptr<melatonin::Inspector> inspector;
     juce::TextButton inspectButton{ "Debug UI" };
-    void setupGUI_DebugInspector();
+    [[maybe_unused]] void setupGUI_DebugInspector();
 #endif // DEBUG
 
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(TinTinEditor)

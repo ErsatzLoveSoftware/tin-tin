@@ -95,7 +95,7 @@ namespace melatonin
                 return;
 
             // the root component is larger, so we want to clip it
-            // because we need to hack some padding in
+            // because we need to hack some PADDING in
             auto itemArea = g.getClipBounds().removeFromBottom (28);
 
             if (isSelected())
@@ -104,7 +104,7 @@ namespace melatonin
                 g.fillRect (itemArea);
             }
 
-            // we can't add padding to the viewport
+            // we can't add PADDING to the viewport
             // without screwing up the highlight style
             // so we have to add to indent to make sure close/open still works
             int textIndent = additionalTextIndent + 7;
@@ -138,7 +138,7 @@ namespace melatonin
         // must override to set the disclosure triangle color
         void paintOpenCloseButton (juce::Graphics& g, const juce::Rectangle<float>& area, juce::Colour /*backgroundColour*/, bool isMouseOver) override
         {
-            // need to add 18px of indent here too since we can't add viewport padding
+            // need to add 18px of indent here too since we can't add viewport PADDING
             disclosureRect = area.translated (additionalTextIndent, 0);
             getOwnerView()->getLookAndFeel().drawTreeviewPlusMinusBox (g, disclosureRect, colors::treeViewMinusPlusColor, isOpen(), isMouseOver);
         }
@@ -292,7 +292,7 @@ namespace melatonin
         {
             auto normalItemHeight = 28;
 
-            // root has top padding
+            // root has top PADDING
             return (getParentItem() == nullptr) ? normalItemHeight + 12 : normalItemHeight;
         }
 

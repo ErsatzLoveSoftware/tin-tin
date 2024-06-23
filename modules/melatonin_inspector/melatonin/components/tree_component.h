@@ -40,7 +40,7 @@ namespace melatonin
                 searchRow.removeFromRight (8);
                 searchBox.setBounds (searchRow);
 
-                tree.setBounds (area); // padding in these default components are a mess
+                tree.setBounds (area); // PADDING in these default components are a mess
                 emptySearchLabel.setBounds (area.reduced (4));
             }
             else

@@ -10,10 +10,24 @@ PluginProcessor::PluginProcessor()
 #endif
     .withOutput ("Output", juce::AudioChannelSet::stereo(), true)
 #endif
-) {
+), paramTree(*this, nullptr, "Params", createParameterLayout()) {
 }
 
 PluginProcessor::~PluginProcessor() = default;
+
+juce::AudioProcessorValueTreeState::ParameterLayout PluginProcessor::createParameterLayout()
+{
+    std::vector<std::unique_ptr<juce::RangedAudioParameter>> params;
+    
+    juce::StringArray testStringArray = {"String1", "String2", "String3"};
+    auto testChoices = std::make_unique<juce::AudioParameterChoice>(
+        "testType", "TestType", testStringArray, 0
+    );
+    
+    params.push_back(std::move(testChoices));
+    
+    return { params.begin(), params.end() };
+}
 
 //==============================================================================
 const juce::String PluginProcessor::getName() const {
@@ -73,7 +87,7 @@ void PluginProcessor::changeProgramName(int index, const juce::String &newName) 
 //==============================================================================
 void PluginProcessor::prepareToPlay(double sampleRate, int samplesPerBlock) {
     // Use this method as the place to do any pre-playback
-    // initialisation that you need..
+    // initialisation that you need.
     juce::ignoreUnused(sampleRate, samplesPerBlock);
 }
 
@@ -103,7 +117,7 @@ bool PluginProcessor::isBusesLayoutSupported(const BusesLayout &layouts) const {
 #endif
 }
 
-void PluginProcessor::processBlock(juce::AudioBuffer<float> &buffer, juce::MidiBuffer &midiMessages) {
+void PluginProcessor::processBlock([[maybe_unused]] juce::AudioBuffer<float> &buffer, juce::MidiBuffer &midiMessages) {
     tinTinProcessor.process(midiMessages);
 }
 

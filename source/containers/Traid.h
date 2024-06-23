@@ -81,16 +81,14 @@ public:
     {
         return _triadAsString;
     }
-
-public:
+    
     MidiNote first;
     MidiNote second;
     MidiNote third;
 
 private:
     juce::String _triadAsString;
-
-private:
+    
     Triad(
         MidiNote inFirst,
         MidiNote inSecond,

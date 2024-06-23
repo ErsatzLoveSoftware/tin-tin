@@ -12,8 +12,9 @@ namespace wammy::consts
     constexpr int INITIAL_M_VOICE_HELD_DOWN_CACHE_SIZE = 12;
     constexpr int NUM_MIDI_CHANNELS = 16;
     constexpr int NUM_MIDI_NOTES = 127;
-    constexpr std::string_view INVALID_MIDI_NOTE = "INVALID_MIDI_NOTE";
-    constexpr size_t RING_BUFFER_SIZE = 512;
+    constexpr const char* INVALID_MIDI_NOTE = "INVALID_MIDI_NOTE";
+
+    [[maybe_unused]] constexpr size_t RING_BUFFER_SIZE = 512;
 }
 
 namespace wammy::audio_utils
@@ -69,6 +70,6 @@ namespace wammy::audio_utils
             return "B";
         }
 
-        return consts::INVALID_MIDI_NOTE.data();
+        return consts::INVALID_MIDI_NOTE;
     }
 }

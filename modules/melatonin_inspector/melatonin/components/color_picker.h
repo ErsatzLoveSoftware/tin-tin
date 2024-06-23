@@ -119,7 +119,7 @@ namespace melatonin
 
             auto area = getLocalBounds();
 
-            // overlaps with the panel + bit of padding
+            // overlaps with the panel + bit of PADDING
             colorValueBounds = area.removeFromTop (32).withTrimmedRight (36).withSizeKeepingCentre (rgbaToggle.rgba ? 100 : 90, 32);
 
             area.removeFromTop (5);

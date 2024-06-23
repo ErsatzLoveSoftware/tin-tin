@@ -21,21 +21,21 @@ namespace wammy::logger
     {
         const std::string mVoiceString = wammy::audio_utils::stringifyMidiNote(mVoice);
 
-        const MidiNote tVoiceFirstPosition = mVoice + tVoice.firstPosition;
+        const MidiNote tVoiceFirstPosition = mVoice + tVoice.first;
         const std::string firstPositionString = tVoiceFirstPosition < 0 ?
                                                 stringifyMidiNote(
                                                     tVoiceFirstPosition + wammy::consts::NUM_SEMI_TONES_IN_OCTAVE) :
                                                 stringifyMidiNote(tVoiceFirstPosition);
 
-        const MidiNote tVoiceSecondPosition = mVoice + tVoice.secondPosition;
+        const MidiNote tVoiceSecondPosition = mVoice + tVoice.second;
         const std::string secondPositionString = tVoiceSecondPosition < 0 ?
                                                  stringifyMidiNote(
                                                      tVoiceSecondPosition + wammy::consts::NUM_SEMI_TONES_IN_OCTAVE) :
                                                  stringifyMidiNote(tVoiceSecondPosition);
 
         std::cout << mVoice << "  " << mVoiceString << " -> [1st position: " <<
-                  tVoice.firstPosition << " (" << firstPositionString << "), 2nd position: " <<
-                  tVoice.secondPosition << " (" << secondPositionString << ")]\n";
+                  tVoice.first << " (" << firstPositionString << "), 2nd position: " <<
+                  tVoice.second << " (" << secondPositionString << ")]\n";
     }
 
     static void logVoiceCache(const VoiceCacheMap& voiceMap)

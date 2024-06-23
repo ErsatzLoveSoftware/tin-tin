@@ -12,6 +12,7 @@
 #include "juce_audio_basics/juce_audio_basics.h"
 
 /* Forward declares */
+struct IntervalPositionPair;
 class Triad;
 
 enum class ETinTinDirection
@@ -28,8 +29,6 @@ enum class ETinTinPosition
     FirstPosition = 1,
     SecondPosition,
     Alternating
-    // TODO: CounterM_Voice
-    // TODO: FollowM_Voice
 };
 
 enum class ETinTinTriadType
@@ -38,8 +37,6 @@ enum class ETinTinTriadType
     Minor,
     Augmented,
     Diminished
-
-    // TODO: Add a "Custom" mode.
 };
 
 namespace tin_tin::defaults
@@ -50,6 +47,7 @@ namespace tin_tin::defaults
     constexpr ETinTinPosition tVoicePosition = ETinTinPosition::FirstPosition;
     constexpr ETinTinTVoiceOctave tVoiceFollowingOctave = ETinTinTVoiceOctave::Zero;
     constexpr ETinTinTVoiceOctave tVoiceStaticOctave = ETinTinTVoiceOctave::Five;
+    
     constexpr float tVoiceVelocity = 0.5f;
     constexpr int tVoiceMidiChannel = 1;
 }
@@ -61,16 +59,15 @@ public:
 
     ~TinTinProcessor() noexcept;
 
-    inline void panic()
-    {
-        _shouldPanic = true;
-    }
+    inline void panic() { _shouldPanic = true; }
 
     inline void toggleBypass() { _bypass = !_bypass; }
     
     inline void toggleMuteMVoice() { _shouldMuteMVoice = !_shouldMuteMVoice; }
 
     inline void updateTVoiceVelocity(float velocity) { _tVoiceVelocity = velocity; }
+    
+    void resetProcessedMidiBuffer();
 
     void updateTVoiceMidiChannel(const int midiChannel)
     {
@@ -113,12 +110,12 @@ private:
     // Options.
     wammy::audio_utils::ENote _triadRoot = tin_tin::defaults::triadRoot;
     ETinTinTriadType _triadType = tin_tin::defaults::triadType;
-    
+
     // Midi Messages.
     juce::MidiMessage _tVoiceMidiMessage{};
     juce::MidiMessage _newestMidiMessage{};
     MidiNote _previousMVoiceMidiNote{ 0 };
-    
+
     int _tVoiceMidiChannel = tin_tin::defaults::tVoiceMidiChannel;
     float _tVoiceVelocity = tin_tin::defaults::tVoiceVelocity;
     bool _shouldMuteMVoice = false;
@@ -148,11 +145,14 @@ private:
     };
 
     std::vector<NoteOnPair> _noteOnMVoices{};
-
+    MidiNote lastFollowTVoice{};
+    MidiNote lastCounterTVoice{};
+    
 private:
     JUCE_NODISCARD Triad getSelectedTriad();
     JUCE_NODISCARD MidiNote resolveTVoice(MidiNote mVoice);
     JUCE_NODISCARD MidiInterval resolvedPosition(IntervalPositionPair voiceIntervalPair) const;
+    JUCE_NODISCARD MidiNote resolvePositionAndOctave(MidiNote mVoice, const TinTinOctave& octave, const IntervalPositionPair& positionPair);
 
     // TODO: Rename.
     void cacheNoteOnPair(NoteOnPair& noteOnPair);

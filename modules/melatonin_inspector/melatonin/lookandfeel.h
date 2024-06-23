@@ -67,7 +67,7 @@ namespace melatonin
         {
             auto tickBounds = area;
 
-            // root component is larger than 28 because of top padding
+            // root component is larger than 28 because of top PADDING
             tickBounds = tickBounds.removeFromBottom (28);
             tickBounds.reduce (0, 2);
             auto boxSize = juce::jmin (tickBounds.getHeight(), tickBounds.getWidth());

@@ -64,7 +64,7 @@ There's like...4 different ways to do this, visually and numerically...
 <img src="https://user-images.githubusercontent.com/472/213701508-eaf1dfc6-4465-4581-915e-7d788d47e08c.gif" width="600"/>
 </p>
 
-We also display component *padding* if you follow the convention of storing them as the component properties  `paddingLeft`, `paddingTop`, `paddingRight`, `paddingBottom`. See my `PaddedComponent` [base class as an example](https://gist.github.com/sudara/eed6b8bb3b960b4c2156a0883913ea15).
+We also display component *PADDING* if you follow the convention of storing them as the component properties  `paddingLeft`, `paddingTop`, `paddingRight`, `paddingBottom`. See my `PaddedComponent` [base class as an example](https://gist.github.com/sudara/eed6b8bb3b960b4c2156a0883913ea15).
 
 <p align="center">
 <img src="https://user-images.githubusercontent.com/472/213940575-0f9fa289-6b00-4899-b07e-9c9ae9e500c9.gif" width="600"/>

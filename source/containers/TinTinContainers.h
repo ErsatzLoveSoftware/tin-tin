@@ -21,21 +21,20 @@ enum class ETinTinTVoiceOctave
 
 struct IntervalPositionPair
 {
-    IntervalPositionPair(MidiInterval inFirstVoice, MidiInterval inSecondVoice) :
-        firstPosition(inFirstVoice),
-        secondPosition(inSecondVoice)
+    IntervalPositionPair(MidiInterval inFirstVoice, MidiInterval inSecondVoice) : first (inFirstVoice), 
+                                                                                   second (inSecondVoice)
     {
     }
 
-    MidiInterval firstPosition{ 0 };
-    MidiInterval secondPosition{ 0 };
+    MidiInterval first { 0 };
+    MidiInterval second { 0 };
 };
 
 struct TinTinOctave
 {
     ETinTinTVoiceOctave relativeOctave = ETinTinTVoiceOctave::Zero;
     ETinTinTVoiceOctave staticOctave = ETinTinTVoiceOctave::Zero;
-    bool isStatic = false; // TODO: Add to defaults.
+    bool isStatic = false;
 };
 
 struct TinTinVoiceTable
@@ -53,7 +52,9 @@ struct TinTinVoiceTable
     }
 
     MidiNote mVoice{ 0 };
+    
     IntervalPositionPair inferiorVoices{ 0, 0 };
+    
     IntervalPositionPair superiorVoice{ 0, 0 };
 };
 

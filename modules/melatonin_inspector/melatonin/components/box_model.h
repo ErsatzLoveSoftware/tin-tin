@@ -109,7 +109,7 @@ namespace melatonin
             g.setColour (colors::boxModelBoundingBox);
             g.drawRect (componentRectangle(), 1);
 
-            // draw padding
+            // draw PADDING
             g.setColour (colors::boxModelBoundingBox.withAlpha (0.2f));
             g.drawRect (componentRectangle(), (int) padding);
         }
