@@ -48,7 +48,7 @@ namespace tin_tin::defaults
     constexpr ETinTinTVoiceOctave tVoiceFollowingOctave = ETinTinTVoiceOctave::Zero;
     constexpr ETinTinTVoiceOctave tVoiceStaticOctave = ETinTinTVoiceOctave::Five;
     
-    constexpr float tVoiceVelocity = 0.5f;
+    constexpr double tVoiceVelocity = 0.5;
     constexpr int tVoiceMidiChannel = 1;
 }
 
@@ -82,16 +82,13 @@ public:
 
     void updateVoiceCacheMap(
         std::optional<wammy::audio_utils::ENote> triadRoot = std::nullopt,
-        std::optional<ETinTinTriadType> chordType = std::nullopt
-    );
+        std::optional<ETinTinTriadType> chordType = std::nullopt);
 
     void process(juce::MidiBuffer& outMidiBuffer);
 
     JUCE_NODISCARD static IntervalPositionPair computeInferiorVoices(MidiNote note, const Triad& triad);
 
     JUCE_NODISCARD static IntervalPositionPair computeSuperiorVoices(MidiNote note, const Triad& triad);
-
-public:
 
     TinTinOctave inferiorOctave;
     TinTinOctave superiorOctave;
@@ -107,11 +104,11 @@ private:
     juce::MidiBuffer _processedMidiBuffer{};
     VoiceCacheMap _voiceTable{};
 
-    // Options.
+    // Options
     wammy::audio_utils::ENote _triadRoot = tin_tin::defaults::triadRoot;
     ETinTinTriadType _triadType = tin_tin::defaults::triadType;
 
-    // Midi Messages.
+    // Midi Messages
     juce::MidiMessage _tVoiceMidiMessage{};
     juce::MidiMessage _newestMidiMessage{};
     MidiNote _previousMVoiceMidiNote{ 0 };
@@ -119,8 +116,8 @@ private:
     int _tVoiceMidiChannel = tin_tin::defaults::tVoiceMidiChannel;
     float _tVoiceVelocity = tin_tin::defaults::tVoiceVelocity;
     bool _shouldMuteMVoice = false;
-    bool _shouldPanic = false;
-    bool _bypass = false;
+    std::atomic_bool _shouldPanic = false;
+    std::atomic_bool _bypass = false;
 
     std::uint32_t _globalVoiceTick{ 0 };
     std::uint32_t _directionTick{ 0 };
@@ -148,13 +145,14 @@ private:
     MidiNote lastFollowTVoice{};
     MidiNote lastCounterTVoice{};
     
-private:
     JUCE_NODISCARD Triad getSelectedTriad();
     JUCE_NODISCARD MidiNote resolveTVoice(MidiNote mVoice);
     JUCE_NODISCARD MidiInterval resolvedPosition(IntervalPositionPair voiceIntervalPair) const;
-    JUCE_NODISCARD MidiNote resolvePositionAndOctave(MidiNote mVoice, const TinTinOctave& octave, const IntervalPositionPair& positionPair);
+    JUCE_NODISCARD MidiNote resolvePositionAndOctave(
+        MidiNote mVoice,
+        const TinTinOctave& octave,
+        const IntervalPositionPair& positionPair);
 
-    // TODO: Rename.
     void cacheNoteOnPair(NoteOnPair& noteOnPair);
 
     void processImpl(juce::MidiBuffer& outMidiBuffer);

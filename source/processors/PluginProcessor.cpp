@@ -19,13 +19,83 @@ juce::AudioProcessorValueTreeState::ParameterLayout PluginProcessor::createParam
 {
     std::vector<std::unique_ptr<juce::RangedAudioParameter>> params;
     
-    juce::StringArray testStringArray = {"String1", "String2", "String3"};
-    auto testChoices = std::make_unique<juce::AudioParameterChoice>(
-        "testType", "TestType", testStringArray, 0
+    // ::::::: Bypass ::::::: 
+    auto bypass = std::make_unique<juce::AudioParameterBool>("bypass", "Bypass", false);
+
+    // ::::::: Triad Root :::::::
+    juce::StringArray triadRootsArray;
+    for (MidiNote note = 1; note < wammy::consts::NUM_SEMI_TONES_IN_OCTAVE + 1; ++note)
+    {
+        triadRootsArray.add(wammy::audio_utils::stringifyMidiNote(note - 1).data());
+    }
+    
+    auto triadRoots = std::make_unique<juce::AudioParameterChoice>(
+        "scale root selector", "Scale Root Selector", triadRootsArray, 0
+    );
+
+    // ::::::: Triad Type :::::::
+    juce::StringArray triadTypesArray;
+    triadTypesArray.add("major");
+    triadTypesArray.add("minor");
+    triadTypesArray.add("augmented");
+    triadTypesArray.add("diminished");
+    
+    auto triadTypes = std::make_unique<juce::AudioParameterChoice>(
+        "triad", "Triad", triadTypesArray, 0
     );
     
-    params.push_back(std::move(testChoices));
+    // ::::::: Direction Algo :::::::
+    juce::StringArray directionsArray;
+    directionsArray.add("superior");
+    directionsArray.add("inferior");
+    directionsArray.add("alternating");
+    directionsArray.add("follow m voice");
+    directionsArray.add("counter m voice");
     
+    auto directionTypes = std::make_unique<juce::AudioParameterChoice>(
+        "t voice direction", "T Voice Direction", directionsArray, 0
+    );
+    
+    // ::::::: Position Algo :::::::
+    juce::StringArray positionsArray;
+    positionsArray.add("first");
+    positionsArray.add("second");
+    positionsArray.add("alternating");
+    
+    auto positionTypes = std::make_unique<juce::AudioParameterChoice>(
+        "t voice position", "T Voice Position", positionsArray, 0
+    );
+    
+    // ::::::: Position Algo :::::::
+    juce::StringArray octaveArray;
+    octaveArray.add("-3");
+    octaveArray.add("-2");
+    octaveArray.add("-1");
+    octaveArray.add("0");
+    octaveArray.add("1");
+    octaveArray.add("2");
+    octaveArray.add("3");
+    
+    // TODO: Change options when make static is pressed.
+    auto octavePositions = std::make_unique<juce::AudioParameterChoice>(
+        "s voice octave", "S Voice Octave", octaveArray, 0
+    );
+    
+//    juce::AudioParameterChoice::Listener listener;
+//    octavePositions->addListener();
+
+    // ::::::: T Voice Velocity :::::::
+    auto tVoiceVelocitySlider = std::make_unique<juce::AudioParameterFloat>(
+        "t voice velocity", "T Voice Velocity", 0.f, 1.f, static_cast<float>(tin_tin::defaults::tVoiceVelocity)
+    );
+    
+    params.push_back(std::move(bypass));
+    params.push_back(std::move(triadRoots));
+    params.push_back(std::move(triadTypes));
+    params.push_back(std::move(directionTypes));
+    params.push_back(std::move(positionTypes));
+    params.push_back(std::move(tVoiceVelocitySlider));
+
     return { params.begin(), params.end() };
 }
 
@@ -127,7 +197,7 @@ bool PluginProcessor::hasEditor() const {
 }
 
 juce::AudioProcessorEditor *PluginProcessor::createEditor() {
-    return new TinTinEditor(*this);
+    return new TinTinEditor(*this, paramTree);
 }
 
 void PluginProcessor::getStateInformation(juce::MemoryBlock &destData) {

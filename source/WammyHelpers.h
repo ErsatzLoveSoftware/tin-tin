@@ -40,7 +40,7 @@ namespace wammy::audio_utils
         B
     };
 
-    JUCE_NODISCARD inline std::string stringifyMidiNote(MidiNote midiNote)
+    JUCE_NODISCARD constexpr std::string stringifyMidiNote(MidiNote midiNote)
     {
         switch (static_cast<ENote>(normalizeMidiNote(midiNote)))
         {

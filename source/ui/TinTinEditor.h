@@ -17,33 +17,56 @@
 class TinTinEditor final : public juce::AudioProcessorEditor
 {
 public:
-    explicit TinTinEditor(PluginProcessor&);
+    explicit TinTinEditor(
+        PluginProcessor& p,
+        juce::AudioProcessorValueTreeState& paramTree
+    );
 
-    ~TinTinEditor() override = default;
+    ~TinTinEditor() override
+    {
+        _tVoiceVelocityAttachment.reset(); // TODO: removed this to default.
+    }
     
     void paint(juce::Graphics& g) override;
 
     void resized() override;
 
 private:
+    using ButtonAttachment = juce::AudioProcessorValueTreeState::ButtonAttachment;
+    using ComboBoxAttachment = juce::AudioProcessorValueTreeState::ComboBoxAttachment;
+    using SliderAttachment = juce::AudioProcessorValueTreeState::SliderAttachment;
+    
     // Reference to audio/midi processor.
     PluginProcessor& _processorRef;
+    juce::AudioProcessorValueTreeState& _paramTree;
 
     // Master controls.
+    std::unique_ptr<ButtonAttachment> _bypassAttachment;
     juce::ToggleButton _bypassToggle{ "bypass" };
     juce::ToggleButton _muteMVoiceToggle{ "mute m voice :x" };
 
     // tintin Controls.
+    std::unique_ptr<ComboBoxAttachment> _triadComboBoxAttachment;
     TinTinComboBox _triadSelector{"triad"};
+    
+    std::unique_ptr<ComboBoxAttachment> _rootComboBoxAttachment;
     TinTinComboBox _triadRootSelector{"scale root selector"};
+    
+    std::unique_ptr<ComboBoxAttachment> _directionComboBoxAttachment;
     TinTinComboBox _tVoiceDirectionSelector{"t voice direction"};
+    
+    std::unique_ptr<ComboBoxAttachment> _positionComboBoxAttachment;
     TinTinComboBox _tVoicePositionSelector{"t voice position"};
+    
+    // TODO: Logic for octave switching.
     TinTinOctaveComponent _octaveComponent{_processorRef};
 
     // Midi Controls.
     TinTinButton _panicButton{ "panic!! :O" };
-    juce::Slider _tVoiceVelocitySlider{"t voice velocity"};
     TinTinComboBox _tVoiceMidiChannelSelector{"midi channel"};
+    
+    std::unique_ptr<SliderAttachment> _tVoiceVelocityAttachment;
+    juce::Slider _tVoiceVelocitySlider{"t voice velocity"};
     
     // Displays
     TinTinNoteDisplayComponent _noteDisplayComponent;

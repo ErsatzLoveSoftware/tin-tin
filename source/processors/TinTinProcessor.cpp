@@ -29,11 +29,7 @@ void TinTinProcessor::resetProcessedMidiBuffer ()
     {
         for (int noteNumber = 0; noteNumber < NUM_MIDI_NOTES; ++noteNumber)
         {
-            offMidiMessage = juce::MidiMessage::noteOff(
-                channelNumber,
-                noteNumber
-            );
-            
+            offMidiMessage = juce::MidiMessage::noteOff(channelNumber, noteNumber);
             constexpr int sampleNumber = 0;
             _processedMidiBuffer.addEvent(offMidiMessage, sampleNumber);
         }
@@ -66,7 +62,7 @@ void TinTinProcessor::processImpl(juce::MidiBuffer& outMidiBuffer)
     for (const juce::MidiMessageMetadata& midiMetadata : outMidiBuffer)
     {
         juce::MidiMessage mVoiceMidiMessage = midiMetadata.getMessage();
-        MidiNote mVoiceNote = mVoiceMidiMessage.getNoteNumber();
+        const MidiNote mVoiceNote = mVoiceMidiMessage.getNoteNumber();
 
         // :::::::::::::: Note Off ::::::::::::::
         if (mVoiceMidiMessage.isNoteOff())
@@ -141,7 +137,7 @@ void TinTinProcessor::updateVoiceCacheMap(
     _triadType = triadType.has_value() ? triadType.value() : _triadType;
 
     _voiceTable.clear();
-    const Triad triad = getSelectedTriad(); // TODO: Add to FIFO buffer.
+    const Triad triad = getSelectedTriad();
     selectedTriad = triad.stringify();
     for (MidiNote note = 0; note < NUM_SEMI_TONES_IN_OCTAVE; ++note)
     {

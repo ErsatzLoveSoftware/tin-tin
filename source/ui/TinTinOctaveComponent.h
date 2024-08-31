@@ -2,8 +2,8 @@
 
 #include <utility>
 
-#include "juce_gui_extra/juce_gui_extra.h"
 #include "juce_gui_basics/juce_gui_basics.h"
+#include "juce_gui_extra/juce_gui_extra.h"
 
 #include "TinTinComponents.h"
 
@@ -19,19 +19,23 @@ class OctaveComponent final : public juce::Component
 public:
     static constexpr int OCTAVE_COMPONENT_WIDTH = 232;
     static constexpr int OCTAVE_COMPONENT_HEIGHT = 35;
-    
+
     OctaveComponent() = delete;
 
     explicit OctaveComponent(
         PluginProcessor& processorRef,
         TinTinOctave& octaveRef,
-        juce::String label = "",
+        juce::String&& label = "",
+        juce::String&& componentLabel = "",
         int xPosition = 0,
-        int yPosition = 0) :
-        _processorRef(processorRef),
-        _octaveRef(octaveRef),
-        _label(std::move(label))
+        int yPosition = 0) : _processorRef(processorRef),
+                             _octaveRef(octaveRef),
+                             _uiLabel(std::move(label)),
+                             _componentLabel(std::move(componentLabel))
     {
+        octaveSelector.setName(_componentLabel + " " + octaveSelector.getName());
+        _makeStaticToggle.setName(_componentLabel + " " + _makeStaticToggle.getName());
+
         setBounds(xPosition, yPosition, OCTAVE_COMPONENT_WIDTH, OCTAVE_COMPONENT_HEIGHT);
         setupComboBoxes();
         setupMakeStaticToggle();
@@ -51,25 +55,23 @@ public:
             selectorPositionX,
             selectorPositionY,
             selectorWidth,
-            selectorHeight
-        );
+            selectorHeight);
 
         g.drawText(
-            _label,
+            _uiLabel,
             labelBounds,
             juce::Justification::left,
-            false
-        );
+            false);
     }
 
 private:
     [[maybe_unused]] PluginProcessor& _processorRef;
     TinTinOctave& _octaveRef;
-    juce::String _label;
+    juce::String _uiLabel;
+    juce::String _componentLabel;
 
     // Octave selector.
-    TinTinComboBox _relativeOctaveSelector{ "relative octave selector" };
-    TinTinComboBox _staticOctaveSelector{ "static octave selector" };
+    TinTinComboBox octaveSelector{ "octave selector" };
     juce::ToggleButton _makeStaticToggle{ "make static" };
 
 private:
@@ -80,44 +82,50 @@ private:
         constexpr int selectorWidth = 59;
         constexpr int selectorHeight = 18;
 
-        addAndMakeVisible(_relativeOctaveSelector);
-        _relativeOctaveSelector.setBounds(selectorPositionX, selectorPositionY, selectorWidth, selectorHeight);
-        _relativeOctaveSelector.addItem("-3", static_cast<int>(ETinTinTVoiceOctave::MinusThree));
-        _relativeOctaveSelector.addItem("-2", static_cast<int>(ETinTinTVoiceOctave::MinusTwo));
-        _relativeOctaveSelector.addItem("-1", static_cast<int>(ETinTinTVoiceOctave::MinusOne));
-        _relativeOctaveSelector.addItem("0", static_cast<int>(ETinTinTVoiceOctave::Zero));
-        _relativeOctaveSelector.addItem("1", static_cast<int>(ETinTinTVoiceOctave::One));
-        _relativeOctaveSelector.addItem("2", static_cast<int>(ETinTinTVoiceOctave::Two));
-        _relativeOctaveSelector.addItem("3", static_cast<int>(ETinTinTVoiceOctave::Three));
-        _relativeOctaveSelector.setSelectedId(static_cast<int>(tin_tin::defaults::tVoiceFollowingOctave));
-        _relativeOctaveSelector.onChange = [&]() -> void
+        addAndMakeVisible(octaveSelector);
+        octaveSelector.setBounds(selectorPositionX, selectorPositionY, selectorWidth, selectorHeight);
+        octaveSelector.onChange = [&]
         {
-            _octaveRef.relativeOctave = static_cast<ETinTinTVoiceOctave>(
-                _relativeOctaveSelector.getSelectedId() - static_cast<int>(ETinTinTVoiceOctave::Zero)
-            );
+            if (!_octaveRef.isStatic)
+            {
+                _octaveRef.relativeOctave = static_cast<ETinTinTVoiceOctave> (
+                    octaveSelector.getSelectedId() - static_cast<int> (ETinTinTVoiceOctave::Zero));
+            }
+            else
+            {
+                _octaveRef.staticOctave = static_cast<ETinTinTVoiceOctave> (
+                    octaveSelector.getSelectedId() - static_cast<int> (ETinTinTVoiceOctave::Zero));
+            }
         };
+    }
 
-        // TODO: This is not matching logics octaves!
-        addAndMakeVisible(_staticOctaveSelector);
-        _staticOctaveSelector.setVisible(false);
-        _staticOctaveSelector.setBounds(selectorPositionX, selectorPositionY, selectorWidth, selectorHeight);
-        _staticOctaveSelector.addItem("0", static_cast<int>(ETinTinTVoiceOctave::Zero));
-        _staticOctaveSelector.addItem("1", static_cast<int>(ETinTinTVoiceOctave::One));
-        _staticOctaveSelector.addItem("2", static_cast<int>(ETinTinTVoiceOctave::Two));
-        _staticOctaveSelector.addItem("3", static_cast<int>(ETinTinTVoiceOctave::Three));
-        _staticOctaveSelector.addItem("4", static_cast<int>(ETinTinTVoiceOctave::Four));
-        _staticOctaveSelector.addItem("5", static_cast<int>(ETinTinTVoiceOctave::Five));
-        _staticOctaveSelector.addItem("6", static_cast<int>(ETinTinTVoiceOctave::Six));
-        _staticOctaveSelector.addItem("7", static_cast<int>(ETinTinTVoiceOctave::Seven));
-        _staticOctaveSelector.addItem("8", static_cast<int>(ETinTinTVoiceOctave::Eight));
-        _staticOctaveSelector.addItem("9", static_cast<int>(ETinTinTVoiceOctave::Nine));
-        _staticOctaveSelector.setSelectedId(static_cast<int>(tin_tin::defaults::tVoiceStaticOctave));
-        _staticOctaveSelector.onChange = [&]() -> void
-        {
-            _octaveRef.staticOctave = static_cast<ETinTinTVoiceOctave>(
-                _staticOctaveSelector.getSelectedId() - static_cast<int>(ETinTinTVoiceOctave::Zero)
-            );
-        };
+    void populateStaticOctaveOptions()
+    {
+        octaveSelector.clear();
+        octaveSelector.addItem("0", static_cast<int> (ETinTinTVoiceOctave::Zero));
+        octaveSelector.addItem("1", static_cast<int> (ETinTinTVoiceOctave::One));
+        octaveSelector.addItem("2", static_cast<int> (ETinTinTVoiceOctave::Two));
+        octaveSelector.addItem("3", static_cast<int> (ETinTinTVoiceOctave::Three));
+        octaveSelector.addItem("4", static_cast<int> (ETinTinTVoiceOctave::Four));
+        octaveSelector.addItem("5", static_cast<int> (ETinTinTVoiceOctave::Five));
+        octaveSelector.addItem("6", static_cast<int> (ETinTinTVoiceOctave::Six));
+        octaveSelector.addItem("7", static_cast<int> (ETinTinTVoiceOctave::Seven));
+        octaveSelector.addItem("8", static_cast<int> (ETinTinTVoiceOctave::Eight));
+        octaveSelector.addItem("9", static_cast<int> (ETinTinTVoiceOctave::Nine));
+        octaveSelector.setSelectedId(static_cast<int> (tin_tin::defaults::tVoiceStaticOctave));
+    }
+
+    void populateRelativeOctaveOptions()
+    {
+        octaveSelector.clear();
+        octaveSelector.addItem("-3", static_cast<int> (ETinTinTVoiceOctave::MinusThree));
+        octaveSelector.addItem("-2", static_cast<int> (ETinTinTVoiceOctave::MinusTwo));
+        octaveSelector.addItem("-1", static_cast<int> (ETinTinTVoiceOctave::MinusOne));
+        octaveSelector.addItem("0", static_cast<int> (ETinTinTVoiceOctave::Zero));
+        octaveSelector.addItem("1", static_cast<int> (ETinTinTVoiceOctave::One));
+        octaveSelector.addItem("2", static_cast<int> (ETinTinTVoiceOctave::Two));
+        octaveSelector.addItem("3", static_cast<int> (ETinTinTVoiceOctave::Three));
+        octaveSelector.setSelectedId(static_cast<int> (tin_tin::defaults::tVoiceFollowingOctave));
     }
 
     void setupMakeStaticToggle()
@@ -132,23 +140,19 @@ private:
             positionX,
             positionY,
             width,
-            height
-        );
+            height);
 
         _makeStaticToggle.onClick = [&]() -> void
         {
             if (_makeStaticToggle.getToggleState())
             {
-                _staticOctaveSelector.setVisible(true);
-                _relativeOctaveSelector.setVisible(false);
+                populateStaticOctaveOptions();
                 _octaveRef.isStatic = true;
+                return;
             }
-            else
-            {
-                _staticOctaveSelector.setVisible(false);
-                _relativeOctaveSelector.setVisible(true);
-                _octaveRef.isStatic = false;
-            }
+
+            populateRelativeOctaveOptions();
+            _octaveRef.isStatic = false;
         };
     }
 };
@@ -157,22 +161,23 @@ class TinTinOctaveComponent final : public juce::Component
 {
 public:
     TinTinOctaveComponent() = delete;
-    
-    ~TinTinOctaveComponent() override = default;
-    
-    explicit TinTinOctaveComponent(PluginProcessor& processor, int xPosition = 0, int yPosition = 0) :
-        _processorRef(processor)
-    {
 
+    ~TinTinOctaveComponent() override = default;
+
+    explicit TinTinOctaveComponent(PluginProcessor& processor, int xPosition = 0, int yPosition = 0)
+        : _processorRef(processor)
+    {
         setBounds(
             xPosition,
             yPosition,
             OctaveComponent::OCTAVE_COMPONENT_WIDTH,
-            OctaveComponent::OCTAVE_COMPONENT_HEIGHT * 2
-        );
+            OctaveComponent::OCTAVE_COMPONENT_HEIGHT * 2);
 
         addAndMakeVisible(_sVoiceOctaveComponent);
         addAndMakeVisible(_iVoiceOctaveComponent);
+
+        _sVoiceOctaveComponent.setName("s voice octave");
+        _iVoiceOctaveComponent.setName("i voice octave");
 
         const auto bounds = _sVoiceOctaveComponent.getLocalBounds();
         const auto width = bounds.getWidth();
@@ -193,7 +198,8 @@ public:
 
 private:
     PluginProcessor& _processorRef;
-    OctaveComponent _sVoiceOctaveComponent{ _processorRef, _processorRef.tinTinProcessor.superiorOctave, "s voice:"};
-    OctaveComponent _iVoiceOctaveComponent{ _processorRef, _processorRef.tinTinProcessor.inferiorOctave, "i voice:"};
+    OctaveComponent _sVoiceOctaveComponent{ _processorRef, _processorRef.tinTinProcessor.superiorOctave, "s voice:",
+                                            "s" };
+    OctaveComponent _iVoiceOctaveComponent{ _processorRef, _processorRef.tinTinProcessor.inferiorOctave, "i voice:",
+                                            "i" };
 };
-
