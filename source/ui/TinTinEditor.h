@@ -44,6 +44,7 @@ private:
     std::unique_ptr<ButtonAttachment> _bypassAttachment;
     juce::ToggleButton _bypassToggle{ "bypass" };
     juce::ToggleButton _muteMVoiceToggle{ "mute m voice :x" };
+    juce::ToggleButton _mpeToggle{ "MPE mode" };
 
     // tintin Controls.
     std::unique_ptr<ComboBoxAttachment> _triadComboBoxAttachment;
@@ -78,6 +79,7 @@ private:
     void setupTVoiceDirectionComboBox();
     void setupTVoicePositionComboBox();
     void setupMVoiceMuteToggle();
+    void setupMPEToggle();
     void setupTVoiceVelocitySlider();
     void setupTMidiChannelSelector();
 

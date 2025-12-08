@@ -52,12 +52,12 @@ namespace tin_tin::defaults
     constexpr int tVoiceMidiChannel = 1;
 }
 
-class JUCE_API TinTinProcessor
+class JUCE_API TinTinProcessor : public juce::MPEInstrument::Listener
 {
 public:
     TinTinProcessor() noexcept;
 
-    ~TinTinProcessor() noexcept;
+    ~TinTinProcessor() noexcept override;
 
     inline void panic() { _shouldPanic = true; }
 
@@ -68,6 +68,14 @@ public:
     inline void updateTVoiceVelocity(float velocity) { _tVoiceVelocity = velocity; }
     
     void resetProcessedMidiBuffer();
+    
+    /** Enable or disable MPE mode. When enabled, incoming MPE messages are properly
+        tracked and expression data is preserved for the M-voice while T-voices are
+        generated on separate channels. */
+    void setMPEMode(bool shouldEnableMPE);
+    
+    /** Returns true if MPE mode is currently enabled. */
+    bool isMPEModeEnabled() const noexcept { return _mpeEnabled; }
 
     void updateTVoiceMidiChannel(const int midiChannel)
     {
@@ -156,4 +164,30 @@ private:
     void cacheNoteOnPair(NoteOnPair& noteOnPair);
 
     void processImpl(juce::MidiBuffer& outMidiBuffer);
+    
+    // MPE processing
+    void processMPEImpl(juce::MidiBuffer& outMidiBuffer);
+    
+    // MPEInstrument::Listener callbacks
+    void noteAdded(juce::MPENote newNote) override;
+    void noteReleased(juce::MPENote finishedNote) override;
+    void notePressureChanged(juce::MPENote changedNote) override;
+    void notePitchbendChanged(juce::MPENote changedNote) override;
+    void noteTimbreChanged(juce::MPENote changedNote) override;
+    void noteKeyStateChanged(juce::MPENote changedNote) override;
+    
+    // MPE state
+    juce::MPEInstrument _mpeInstrument;
+    bool _mpeEnabled = false;
+    int _currentSamplePosition = 0;  // Track sample position for MPE callbacks
+    
+    // Maps MPE note IDs to their corresponding T-voice note numbers
+    struct MPENoteOnPair
+    {
+        juce::uint16 mpeNoteID;
+        int mVoiceChannel;
+        MidiNote mVoiceNote;
+        MidiNote tVoiceNote;
+    };
+    std::vector<MPENoteOnPair> _mpeNoteOnPairs;
 };

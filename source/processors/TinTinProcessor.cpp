@@ -11,14 +11,21 @@ TinTinProcessor::TinTinProcessor() noexcept
 {
     _voiceTable.reserve(NUM_SEMI_TONES_IN_OCTAVE);
     _noteOnMVoices.reserve(INITIAL_M_VOICE_HELD_DOWN_CACHE_SIZE);
+    _mpeNoteOnPairs.reserve(INITIAL_M_VOICE_HELD_DOWN_CACHE_SIZE);
     updateVoiceCacheMap(
         tin_tin::defaults::triadRoot,
         tin_tin::defaults::triadType
     );
+    
+    // Set up MPE instrument with legacy mode by default (standard MIDI)
+    // When MPE mode is enabled, we'll switch to proper MPE zones
+    _mpeInstrument.enableLegacyMode(2, juce::Range<int>(1, 17));
+    _mpeInstrument.addListener(this);
 }
 
 TinTinProcessor::~TinTinProcessor() noexcept
 {
+    _mpeInstrument.removeListener(this);
     _processedMidiBuffer.clear();
 }
 
@@ -124,7 +131,16 @@ void TinTinProcessor::process(juce::MidiBuffer& outMidiBuffer)
     }
 
     _processedMidiBuffer.clear();
-    processImpl(outMidiBuffer);
+    
+    if (_mpeEnabled)
+    {
+        processMPEImpl(outMidiBuffer);
+    }
+    else
+    {
+        processImpl(outMidiBuffer);
+    }
+    
     outMidiBuffer.swapWith(_processedMidiBuffer);
 }
 
@@ -334,3 +350,167 @@ Triad TinTinProcessor::getSelectedTriad()
     
     return Triad::emptyTriad(); // Error.
 }
+
+// ============================================================================
+// MPE Support
+// ============================================================================
+
+void TinTinProcessor::setMPEMode(bool shouldEnableMPE)
+{
+    if (_mpeEnabled == shouldEnableMPE)
+        return;
+        
+    _mpeEnabled = shouldEnableMPE;
+    _mpeInstrument.releaseAllNotes();
+    _mpeNoteOnPairs.clear();
+    
+    if (_mpeEnabled)
+    {
+        // Set up standard MPE lower zone (channel 1 master, channels 2-16 for notes)
+        juce::MPEZone lowerZone(juce::MPEZone::Type::lower, 15, 48, 2);
+        _mpeInstrument.setZoneLayout(juce::MPEZoneLayout(lowerZone));
+    }
+    else
+    {
+        // Return to legacy mode for standard MIDI
+        _mpeInstrument.enableLegacyMode(2, juce::Range<int>(1, 17));
+    }
+}
+
+void TinTinProcessor::processMPEImpl(juce::MidiBuffer& outMidiBuffer)
+{
+    // :::::::::::::: Panic :::::::::::::: 
+    if (_shouldPanic)
+    {
+        resetProcessedMidiBuffer();
+        _mpeInstrument.releaseAllNotes();
+        _mpeNoteOnPairs.clear();
+        _shouldPanic = false;
+        return;
+    }
+
+    // Process each MIDI message through the MPE instrument
+    // The MPE instrument will call our listener callbacks (noteAdded, noteReleased, etc.)
+    for (const juce::MidiMessageMetadata& midiMetadata : outMidiBuffer)
+    {
+        const juce::MidiMessage& message = midiMetadata.getMessage();
+        _currentSamplePosition = midiMetadata.samplePosition;
+        
+        // Let MPEInstrument handle note on/off and convert to MPE notes
+        // This will trigger our listener callbacks
+        _mpeInstrument.processNextMidiEvent(message);
+        
+        // Pass through all MPE expression messages (pitchbend, pressure, CC74/timbre)
+        // for the M-voice channels - these should not be modified
+        if (!_shouldMuteMVoice)
+        {
+            if (message.isPitchWheel() || 
+                message.isChannelPressure() || 
+                message.isAftertouch() ||
+                (message.isController() && message.getControllerNumber() == 74)) // Timbre CC
+            {
+                _processedMidiBuffer.addEvent(message, midiMetadata.samplePosition);
+            }
+        }
+    }
+}
+
+void TinTinProcessor::noteAdded(juce::MPENote newNote)
+{
+    _globalVoiceTick++;
+    _directionTick++;
+    _positionTick++;
+    
+    const MidiNote mVoiceNote = newNote.initialNote;
+    const int mVoiceChannel = newNote.midiChannel;
+    
+    // Generate the M-voice note-on (pass through the original MPE note)
+    if (!_shouldMuteMVoice)
+    {
+        auto mVoiceOnMessage = juce::MidiMessage::noteOn(
+            mVoiceChannel,
+            mVoiceNote,
+            newNote.noteOnVelocity.asUnsignedFloat()
+        );
+        _processedMidiBuffer.addEvent(mVoiceOnMessage, _currentSamplePosition);
+    }
+    
+    // Generate the T-voice
+    MidiNote tVoiceNote = resolveTVoice(mVoiceNote);
+    
+    auto tVoiceOnMessage = juce::MidiMessage::noteOn(
+        _tVoiceMidiChannel,
+        tVoiceNote,
+        _tVoiceVelocity
+    );
+    _processedMidiBuffer.addEvent(tVoiceOnMessage, _currentSamplePosition);
+    
+    // Store the pair for later note-off matching
+    _mpeNoteOnPairs.push_back({
+        newNote.noteID,
+        mVoiceChannel,
+        mVoiceNote,
+        tVoiceNote
+    });
+    
+    _previousMVoiceMidiNote = mVoiceNote;
+}
+
+void TinTinProcessor::noteReleased(juce::MPENote finishedNote)
+{
+    // Find the matching note pair and release both voices
+    for (auto it = _mpeNoteOnPairs.begin(); it != _mpeNoteOnPairs.end(); ++it)
+    {
+        if (it->mpeNoteID == finishedNote.noteID)
+        {
+            // Release M-voice
+            if (!_shouldMuteMVoice)
+            {
+                auto mVoiceOffMessage = juce::MidiMessage::noteOff(
+                    it->mVoiceChannel,
+                    it->mVoiceNote
+                );
+                _processedMidiBuffer.addEvent(mVoiceOffMessage, _currentSamplePosition);
+            }
+            
+            // Release T-voice
+            auto tVoiceOffMessage = juce::MidiMessage::noteOff(
+                _tVoiceMidiChannel,
+                it->tVoiceNote
+            );
+            _processedMidiBuffer.addEvent(tVoiceOffMessage, _currentSamplePosition);
+            
+            _mpeNoteOnPairs.erase(it);
+            break;
+        }
+    }
+}
+
+void TinTinProcessor::notePressureChanged(juce::MPENote changedNote)
+{
+    juce::ignoreUnused(changedNote);
+    // MPE pressure changes are passed through in processMPEImpl
+    // T-voice doesn't receive pressure - it maintains constant velocity
+}
+
+void TinTinProcessor::notePitchbendChanged(juce::MPENote changedNote)
+{
+    juce::ignoreUnused(changedNote);
+    // MPE pitchbend changes are passed through in processMPEImpl
+    // T-voice doesn't receive pitchbend - it stays at the tintinnabuli pitch
+}
+
+void TinTinProcessor::noteTimbreChanged(juce::MPENote changedNote)
+{
+    juce::ignoreUnused(changedNote);
+    // MPE timbre (CC74) changes are passed through in processMPEImpl
+    // T-voice doesn't receive timbre modulation
+}
+
+void TinTinProcessor::noteKeyStateChanged(juce::MPENote changedNote)
+{
+    juce::ignoreUnused(changedNote);
+    // Handle sustain pedal state changes if needed
+    // For now, the MPEInstrument handles this internally
+}
+
