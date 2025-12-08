@@ -8,10 +8,10 @@
 
 #include "TinTinComponents.h"
 #include "TinTInNoteDisplayComponent.h"
+#include "TinTinOctaveComponent.h"
 
 #if DEBUG
     #include "melatonin_inspector/melatonin_inspector.h"
-    #include "TinTinOctaveComponent.h"
 #endif // DEBUG
 
 class TinTinEditor final : public juce::AudioProcessorEditor

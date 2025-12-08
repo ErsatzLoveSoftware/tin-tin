@@ -10,7 +10,7 @@ include(PamplejuceMacOS)
 # This is the internal name of the project and the name of JUCE's shared code target
 # Note: This cannot have spaces (it may be 2024, but you can't have it all!)
 # Worry not, JUCE's PRODUCT_NAME can have spaces (and is what DAWs display)
-set(PROJECT_NAME "TinTin")
+set(PROJECT_NAME "TinTin3")
 
 # Worry not, JUCE's PRODUCT_NAME can have spaces (and is what DAWs will display)
 # You can also just have it be the same thing as PROJECT_NAME
@@ -18,7 +18,7 @@ set(PROJECT_NAME "TinTin")
 #   set(PROJECT_NAME "MyPlugin_v${MAJOR_VERSION}")
 # Doing so enables major versions to show up in IDEs and DAWs as separate plugins
 # allowing you to change parameters and behavior without breaking existing user projects
-set(PRODUCT_NAME "TinTin")
+set(PRODUCT_NAME "TinTin3")
 
 # Change me! Used for the MacOS bundle name and Installers
 set(COMPANY_NAME "wammy")
@@ -60,7 +60,7 @@ juce_add_plugin("${PROJECT_NAME}"
         NEEDS_MIDI_OUTPUT TRUE                      # Does the plugin need midi output?
         IS_MIDI_EFFECT TRUE                         # Is this plugin a MIDI effect?
         # EDITOR_WANTS_KEYBOARD_FOCUS TRUE/FALSE    # Does the editor_consts need keyboard focus?
-        # COPY_PLUGIN_AFTER_BUILD TRUE/FALSE        # Should the plugin be installed to a default location after building?
+        COPY_PLUGIN_AFTER_BUILD TRUE                # Should the plugin be installed to a default location after building?
         PLUGIN_MANUFACTURER_CODE Wamm               # A four-character manufacturer id with at least one upper-case character
         PLUGIN_CODE P001                            # A unique four-character plugin id with exactly one upper-case character
         FORMATS "${FORMATS}"                        # The formats to build. Other valid formats are: AAX Unity VST AU AUv3
