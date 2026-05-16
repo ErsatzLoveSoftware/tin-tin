@@ -22,14 +22,14 @@ public:
     // Returns a sorted major triad of MidiNotes given a root note.
     JUCE_NODISCARD static Triad major(ENote root)
     {
-        std::array<MidiNote, 3> triad = {
+        std::array triad = {
             static_cast<MidiNote>(root),
             normalizeMidiNote(static_cast<MidiNote>(root) + 4),
             normalizeMidiNote(static_cast<MidiNote>(root) + 7)
         };
 
-        juce::String triadString = Triad::makeString(triad[0], triad[1], triad[2]);
-        std::sort(triad.begin(), triad.end(), std::less<>());
+        juce::String triadString = makeString(triad[0], triad[1], triad[2]);
+        std::ranges::sort(triad, std::less<>());
 
         return { triad[0], triad[1], triad[2], triadString };
     }
@@ -37,47 +37,47 @@ public:
     // Returns a sorted minor triad of MidiNotes given a root note.
     JUCE_NODISCARD static Triad minor(ENote root)
     {
-        std::array<MidiNote, 3> triad = {
+        std::array triad = {
             static_cast<MidiNote>(root),
             normalizeMidiNote(static_cast<MidiNote>(root) + 3),
             normalizeMidiNote(static_cast<MidiNote>(root) + 7)
         };
 
-        const juce::String triadString = Triad::makeString(triad[0], triad[1], triad[2]);
-        std::sort(triad.begin(), triad.end(), std::less<>());
+        const juce::String triadString = makeString(triad[0], triad[1], triad[2]);
+        std::ranges::sort(triad, std::less());
 
         return { triad[0], triad[1], triad[2], triadString };
     }
 
     JUCE_NODISCARD static Triad augmented(ENote root)
     {
-        std::array<MidiNote, 3> triad = {
+        std::array triad = {
             static_cast<MidiNote>(root),
             normalizeMidiNote(static_cast<MidiNote>(root) + 4),
             normalizeMidiNote(static_cast<MidiNote>(root) + 8)
         };
 
-        const juce::String triadString = Triad::makeString(triad[0], triad[1], triad[2]);
-        std::sort(triad.begin(), triad.end(), std::less<>());
+        const juce::String triadString = makeString(triad[0], triad[1], triad[2]);
+        std::ranges::sort(triad, std::less());
 
         return { triad[0], triad[1], triad[2], triadString };
     }
 
     JUCE_NODISCARD static Triad diminished(ENote root)
     {
-        std::array<MidiNote, 3> triad = {
+        std::array triad = {
             static_cast<MidiNote>(root),
             normalizeMidiNote(static_cast<MidiNote>(root) + 3),
             normalizeMidiNote(static_cast<MidiNote>(root) + 6)
         };
 
         const juce::String triadString = Triad::makeString(triad[0], triad[1], triad[2]);
-        std::sort(triad.begin(), triad.end(), std::less<>());
+        std::ranges::sort(triad, std::less<>());
 
         return { triad[0], triad[1], triad[2], triadString };
     }
 
-    JUCE_NODISCARD inline const juce::String& stringify() const
+    JUCE_NODISCARD const juce::String& stringify() const
     {
         return _triadAsString;
     }
@@ -90,9 +90,9 @@ private:
     juce::String _triadAsString;
     
     Triad(
-        MidiNote inFirst,
-        MidiNote inSecond,
-        MidiNote inThird,
+        const MidiNote inFirst,
+        const MidiNote inSecond,
+        const MidiNote inThird,
         juce::String triadAsString
     ) :
         first(inFirst),

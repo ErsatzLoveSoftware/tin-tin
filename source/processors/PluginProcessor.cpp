@@ -10,7 +10,8 @@ PluginProcessor::PluginProcessor()
 #endif
     .withOutput ("Output", juce::AudioChannelSet::stereo(), true)
 #endif
-), paramTree(*this, nullptr, "Params", createParameterLayout()) {
+), paramTree(*this, nullptr, "Params", createParameterLayout())
+{
 }
 
 PluginProcessor::~PluginProcessor() = default;
@@ -18,9 +19,10 @@ PluginProcessor::~PluginProcessor() = default;
 juce::AudioProcessorValueTreeState::ParameterLayout PluginProcessor::createParameterLayout()
 {
     std::vector<std::unique_ptr<juce::RangedAudioParameter>> params;
-    
-    // ::::::: Bypass ::::::: 
+
+    // ::::::: Bypass :::::::
     auto bypass = std::make_unique<juce::AudioParameterBool>("bypass", "Bypass", false);
+    params.push_back(std::move(bypass));
 
     // ::::::: Triad Root :::::::
     juce::StringArray triadRootsArray;
@@ -28,10 +30,13 @@ juce::AudioProcessorValueTreeState::ParameterLayout PluginProcessor::createParam
     {
         triadRootsArray.add(wammy::audio_utils::stringifyMidiNote(note - 1).data());
     }
-    
-    auto triadRoots = std::make_unique<juce::AudioParameterChoice>(
-        "scale root selector", "Scale Root Selector", triadRootsArray, 0
-    );
+
+    auto triadRoots = std::make_unique<juce::AudioParameterChoice>("scale root selector",
+        "Scale Root Selector",
+        triadRootsArray,
+        0);
+
+    params.push_back(std::move(triadRoots));
 
     // ::::::: Triad Type :::::::
     juce::StringArray triadTypesArray;
@@ -39,11 +44,12 @@ juce::AudioProcessorValueTreeState::ParameterLayout PluginProcessor::createParam
     triadTypesArray.add("minor");
     triadTypesArray.add("augmented");
     triadTypesArray.add("diminished");
-    
+
     auto triadTypes = std::make_unique<juce::AudioParameterChoice>(
         "triad", "Triad", triadTypesArray, 0
     );
-    
+    params.push_back(std::move(triadTypes));
+
     // ::::::: Direction Algo :::::::
     juce::StringArray directionsArray;
     directionsArray.add("superior");
@@ -51,21 +57,24 @@ juce::AudioProcessorValueTreeState::ParameterLayout PluginProcessor::createParam
     directionsArray.add("alternating");
     directionsArray.add("follow m voice");
     directionsArray.add("counter m voice");
-    
+
     auto directionTypes = std::make_unique<juce::AudioParameterChoice>(
         "t voice direction", "T Voice Direction", directionsArray, 0
     );
-    
+    params.push_back(std::move(directionTypes));
+
     // ::::::: Position Algo :::::::
     juce::StringArray positionsArray;
     positionsArray.add("first");
     positionsArray.add("second");
     positionsArray.add("alternating");
-    
+
     auto positionTypes = std::make_unique<juce::AudioParameterChoice>(
         "t voice position", "T Voice Position", positionsArray, 0
     );
-    
+
+    params.push_back(std::move(positionTypes));
+
     // ::::::: Position Algo :::::::
     juce::StringArray octaveArray;
     octaveArray.add("-3");
@@ -75,36 +84,33 @@ juce::AudioProcessorValueTreeState::ParameterLayout PluginProcessor::createParam
     octaveArray.add("1");
     octaveArray.add("2");
     octaveArray.add("3");
-    
-    // TODO: Change options when make static is pressed.
+
+    // ::::::: Octave Selector :::::::
     auto octavePositions = std::make_unique<juce::AudioParameterChoice>(
         "s voice octave", "S Voice Octave", octaveArray, 0
     );
-    
-//    juce::AudioParameterChoice::Listener listener;
-//    octavePositions->addListener();
+
+//    octavePositions->addListener(this);
+    params.push_back(std::move(octavePositions));
 
     // ::::::: T Voice Velocity :::::::
     auto tVoiceVelocitySlider = std::make_unique<juce::AudioParameterFloat>(
         "t voice velocity", "T Voice Velocity", 0.f, 1.f, static_cast<float>(tin_tin::defaults::tVoiceVelocity)
     );
-    
-    params.push_back(std::move(bypass));
-    params.push_back(std::move(triadRoots));
-    params.push_back(std::move(triadTypes));
-    params.push_back(std::move(directionTypes));
-    params.push_back(std::move(positionTypes));
+
     params.push_back(std::move(tVoiceVelocitySlider));
 
     return { params.begin(), params.end() };
 }
 
 //==============================================================================
-const juce::String PluginProcessor::getName() const {
+const juce::String PluginProcessor::getName() const
+{
     return JucePlugin_Name;
 }
 
-bool PluginProcessor::acceptsMidi() const {
+bool PluginProcessor::acceptsMidi() const
+{
 #if JucePlugin_WantsMidiInput
     return true;
 #else
@@ -112,7 +118,8 @@ bool PluginProcessor::acceptsMidi() const {
 #endif
 }
 
-bool PluginProcessor::producesMidi() const {
+bool PluginProcessor::producesMidi() const
+{
 #if JucePlugin_ProducesMidiOutput
     return true;
 #else
@@ -120,7 +127,8 @@ bool PluginProcessor::producesMidi() const {
 #endif
 }
 
-bool PluginProcessor::isMidiEffect() const {
+bool PluginProcessor::isMidiEffect() const
+{
 #if JucePlugin_IsMidiEffect
     return true;
 #else
@@ -128,45 +136,54 @@ bool PluginProcessor::isMidiEffect() const {
 #endif
 }
 
-double PluginProcessor::getTailLengthSeconds() const {
+double PluginProcessor::getTailLengthSeconds() const
+{
     return 0.0;
 }
 
-int PluginProcessor::getNumPrograms() {
+int PluginProcessor::getNumPrograms()
+{
     return 1;   // NB: some hosts don't cope very well if you tell them there are 0 programs,
     // so this should be at least 1, even if you're not really implementing programs.
 }
 
-int PluginProcessor::getCurrentProgram() {
+int PluginProcessor::getCurrentProgram()
+{
     return 0;
 }
 
-void PluginProcessor::setCurrentProgram(int index) {
+void PluginProcessor::setCurrentProgram(int index)
+{
     juce::ignoreUnused(index);
 }
 
-const juce::String PluginProcessor::getProgramName(int index) {
+const juce::String PluginProcessor::getProgramName(int index)
+{
     juce::ignoreUnused(index);
     return {};
 }
 
-void PluginProcessor::changeProgramName(int index, const juce::String &newName) {
+void PluginProcessor::changeProgramName(int index, const juce::String& newName)
+{
     juce::ignoreUnused(index, newName);
 }
 
 //==============================================================================
-void PluginProcessor::prepareToPlay(double sampleRate, int samplesPerBlock) {
+void PluginProcessor::prepareToPlay(double sampleRate, int samplesPerBlock)
+{
     // Use this method as the place to do any pre-playback
     // initialisation that you need.
     juce::ignoreUnused(sampleRate, samplesPerBlock);
 }
 
-void PluginProcessor::releaseResources() {
+void PluginProcessor::releaseResources()
+{
     // When playback stops, you can use this as an opportunity to free up any
     // spare memory, etc.
 }
 
-bool PluginProcessor::isBusesLayoutSupported(const BusesLayout &layouts) const {
+bool PluginProcessor::isBusesLayoutSupported(const BusesLayout& layouts) const
+{
 #if JucePlugin_IsMidiEffect
     juce::ignoreUnused(layouts);
     return true;
@@ -187,35 +204,115 @@ bool PluginProcessor::isBusesLayoutSupported(const BusesLayout &layouts) const {
 #endif
 }
 
-void PluginProcessor::processBlock([[maybe_unused]] juce::AudioBuffer<float> &buffer, juce::MidiBuffer &midiMessages) {
+void PluginProcessor::processBlock([[maybe_unused]] juce::AudioBuffer<float>& buffer, juce::MidiBuffer& midiMessages)
+{
     tinTinProcessor.process(midiMessages);
 }
 
 //==============================================================================
-bool PluginProcessor::hasEditor() const {
+bool PluginProcessor::hasEditor() const
+{
     return true; // (change this to false if you choose to not supply an editor)
 }
 
-juce::AudioProcessorEditor *PluginProcessor::createEditor() {
+juce::AudioProcessorEditor* PluginProcessor::createEditor()
+{
     return new TinTinEditor(*this, paramTree);
 }
 
-void PluginProcessor::getStateInformation(juce::MemoryBlock &destData) {
-    // You should use this method to store your parameters in the memory block.
-    // You could do that either as raw data, or use the XML or ValueTree classes
-    // as intermediaries to make it easy to save and load complex data.
-    juce::ignoreUnused(destData);
+void PluginProcessor::getStateInformation(juce::MemoryBlock& destData)
+{
+    juce::XmlElement root("TinTin2State");
+
+    // APVTS covers: bypass, scale root, triad type, direction, position, velocity
+    root.addChildElement(paramTree.copyState().createXml().release());
+
+    // Extra state not tracked by APVTS
+    auto* extras = root.createNewChildElement("Extras");
+    extras->setAttribute("midiChannel", tinTinProcessor.getMidiChannel());
+    extras->setAttribute("muteMVoice",  tinTinProcessor.getMuteMVoice());
+
+    auto* sup = extras->createNewChildElement("SuperiorOctave");
+    sup->setAttribute("relativeOctave", static_cast<int>(tinTinProcessor.superiorOctave.relativeOctave));
+    sup->setAttribute("staticOctave",   static_cast<int>(tinTinProcessor.superiorOctave.staticOctave));
+    sup->setAttribute("isStatic",       tinTinProcessor.superiorOctave.isStatic);
+
+    auto* inf = extras->createNewChildElement("InferiorOctave");
+    inf->setAttribute("relativeOctave", static_cast<int>(tinTinProcessor.inferiorOctave.relativeOctave));
+    inf->setAttribute("staticOctave",   static_cast<int>(tinTinProcessor.inferiorOctave.staticOctave));
+    inf->setAttribute("isStatic",       tinTinProcessor.inferiorOctave.isStatic);
+
+    copyXmlToBinary(root, destData);
 }
 
-void PluginProcessor::setStateInformation(const void *data, int sizeInBytes) {
-    // You should use this method to restore your parameters from this memory block,
-    // whose contents will have been created by the getStateInformation() call.
-    juce::ignoreUnused(data, sizeInBytes);
+void PluginProcessor::setStateInformation(const void* data, int sizeInBytes)
+{
+    std::unique_ptr<juce::XmlElement> xml(getXmlFromBinary(data, sizeInBytes));
+    if (xml == nullptr || !xml->hasTagName("TinTin2State"))
+        return;
+
+    // Restore APVTS (updates attached UI controls when the editor next opens)
+    if (auto* paramsXml = xml->getChildByName(paramTree.state.getType()))
+        paramTree.replaceState(juce::ValueTree::fromXml(*paramsXml));
+
+    // ComboBoxAttachment restores the display silently (dontSendNotification),
+    // so onChange never fires — apply parameter values to the processor directly.
+    auto getChoiceIndex = [&](const char* id) -> int
+    {
+        auto* p = dynamic_cast<juce::AudioParameterChoice*>(paramTree.getParameter(id));
+        return p ? p->getIndex() : 0;
+    };
+
+    tinTinProcessor.updateVoiceCacheMap(
+        static_cast<wammy::audio_utils::ENote>(getChoiceIndex("scale root selector")),
+        static_cast<ETinTinTriadType>(getChoiceIndex("triad") + 1));
+
+    tinTinProcessor.tVoiceDirection = static_cast<ETinTinDirection>(getChoiceIndex("t voice direction") + 1);
+    tinTinProcessor.tVoicePosition  = static_cast<ETinTinPosition>(getChoiceIndex("t voice position") + 1);
+
+    if (auto* p = dynamic_cast<juce::AudioParameterFloat*>(paramTree.getParameter("t voice velocity")))
+        tinTinProcessor.updateTVoiceVelocity(p->get());
+
+    if (auto* p = dynamic_cast<juce::AudioParameterBool*>(paramTree.getParameter("bypass")))
+        tinTinProcessor.setBypass(p->get());
+
+    // Restore extras
+    if (auto* extras = xml->getChildByName("Extras"))
+    {
+        tinTinProcessor.updateTVoiceMidiChannel(extras->getIntAttribute("midiChannel", 1));
+        tinTinProcessor.setMuteMVoice(extras->getBoolAttribute("muteMVoice", false));
+
+        if (auto* sup = extras->getChildByName("SuperiorOctave"))
+        {
+            tinTinProcessor.superiorOctave.relativeOctave = static_cast<ETinTinTVoiceOctave>(sup->getIntAttribute("relativeOctave", 0));
+            tinTinProcessor.superiorOctave.staticOctave   = static_cast<ETinTinTVoiceOctave>(sup->getIntAttribute("staticOctave",   5));
+            tinTinProcessor.superiorOctave.isStatic       = sup->getBoolAttribute("isStatic", false);
+        }
+
+        if (auto* inf = extras->getChildByName("InferiorOctave"))
+        {
+            tinTinProcessor.inferiorOctave.relativeOctave = static_cast<ETinTinTVoiceOctave>(inf->getIntAttribute("relativeOctave", 0));
+            tinTinProcessor.inferiorOctave.staticOctave   = static_cast<ETinTinTVoiceOctave>(inf->getIntAttribute("staticOctave",   5));
+            tinTinProcessor.inferiorOctave.isStatic       = inf->getBoolAttribute("isStatic", false);
+        }
+    }
+}
+
+void PluginProcessor::parameterValueChanged(int parameterIndex, float newValue)
+{
+    printf("Liba!!!!!!!!");
+    printf("%i, %f", parameterIndex, newValue);
+}
+
+void PluginProcessor::parameterGestureChanged(int parameterIndex, bool gestureIsStarting)
+{
+    
 }
 
 //==============================================================================
 // This creates new instances of the plugin..
-juce::AudioProcessor *JUCE_CALLTYPE
-createPluginFilter() {
+juce::AudioProcessor* JUCE_CALLTYPE
+createPluginFilter()
+{
     return new PluginProcessor();
 }

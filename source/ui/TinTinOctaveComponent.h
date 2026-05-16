@@ -3,7 +3,6 @@
 #include <utility>
 
 #include "juce_gui_basics/juce_gui_basics.h"
-#include "juce_gui_extra/juce_gui_extra.h"
 
 #include "TinTinComponents.h"
 
@@ -97,6 +96,11 @@ private:
                     octaveSelector.getSelectedId() - static_cast<int> (ETinTinTVoiceOctave::Zero));
             }
         };
+
+        if (_octaveRef.isStatic)
+            populateStaticOctaveOptions();
+        else
+            populateRelativeOctaveOptions();
     }
 
     void populateStaticOctaveOptions()
@@ -112,7 +116,9 @@ private:
         octaveSelector.addItem("7", static_cast<int> (ETinTinTVoiceOctave::Seven));
         octaveSelector.addItem("8", static_cast<int> (ETinTinTVoiceOctave::Eight));
         octaveSelector.addItem("9", static_cast<int> (ETinTinTVoiceOctave::Nine));
-        octaveSelector.setSelectedId(static_cast<int> (tin_tin::defaults::tVoiceStaticOctave));
+        // Item IDs are enum values; stored value is a raw offset, so ID = offset + Zero
+        const int itemId = static_cast<int>(_octaveRef.staticOctave) + static_cast<int>(ETinTinTVoiceOctave::Zero);
+        octaveSelector.setSelectedId(itemId, juce::dontSendNotification);
     }
 
     void populateRelativeOctaveOptions()
@@ -125,7 +131,9 @@ private:
         octaveSelector.addItem("1", static_cast<int> (ETinTinTVoiceOctave::One));
         octaveSelector.addItem("2", static_cast<int> (ETinTinTVoiceOctave::Two));
         octaveSelector.addItem("3", static_cast<int> (ETinTinTVoiceOctave::Three));
-        octaveSelector.setSelectedId(static_cast<int> (tin_tin::defaults::tVoiceFollowingOctave));
+        // Item IDs are enum values; stored value is a raw offset, so ID = offset + Zero
+        const int itemId = static_cast<int>(_octaveRef.relativeOctave) + static_cast<int>(ETinTinTVoiceOctave::Zero);
+        octaveSelector.setSelectedId(itemId, juce::dontSendNotification);
     }
 
     void setupMakeStaticToggle()
@@ -142,17 +150,20 @@ private:
             width,
             height);
 
+        // Reflect restored/initial state without triggering onClick
+        _makeStaticToggle.setToggleState(_octaveRef.isStatic, juce::dontSendNotification);
+
         _makeStaticToggle.onClick = [&]() -> void
         {
             if (_makeStaticToggle.getToggleState())
             {
-                populateStaticOctaveOptions();
                 _octaveRef.isStatic = true;
+                populateStaticOctaveOptions();
                 return;
             }
 
-            populateRelativeOctaveOptions();
             _octaveRef.isStatic = false;
+            populateRelativeOctaveOptions();
         };
     }
 };
@@ -186,12 +197,12 @@ public:
         _iVoiceOctaveComponent.setBounds(0, height, width, height);
     }
 
-    inline void setInferiorVoiceEnabled(bool isEnabled)
+    void setInferiorVoiceEnabled(bool isEnabled)
     {
         _iVoiceOctaveComponent.setEnabled(isEnabled);
     }
 
-    inline void setSuperiorVoiceEnabled(bool isEnabled)
+    void setSuperiorVoiceEnabled(bool isEnabled)
     {
         _sVoiceOctaveComponent.setEnabled(isEnabled);
     }

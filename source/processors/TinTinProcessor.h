@@ -41,15 +41,15 @@ enum class ETinTinTriadType
 
 namespace tin_tin::defaults
 {
-    constexpr wammy::audio_utils::ENote triadRoot = wammy::audio_utils::ENote::C;
-    constexpr ETinTinTriadType triadType = ETinTinTriadType::Major;
-    constexpr ETinTinDirection tVoiceDirection = ETinTinDirection::Superior;
-    constexpr ETinTinPosition tVoicePosition = ETinTinPosition::FirstPosition;
-    constexpr ETinTinTVoiceOctave tVoiceFollowingOctave = ETinTinTVoiceOctave::Zero;
-    constexpr ETinTinTVoiceOctave tVoiceStaticOctave = ETinTinTVoiceOctave::Five;
+    static constexpr wammy::audio_utils::ENote triadRoot = wammy::audio_utils::ENote::C;
+    static constexpr ETinTinTriadType triadType = ETinTinTriadType::Major;
+    static constexpr ETinTinDirection tVoiceDirection = ETinTinDirection::Superior;
+    static constexpr ETinTinPosition tVoicePosition = ETinTinPosition::FirstPosition;
+    static constexpr ETinTinTVoiceOctave tVoiceFollowingOctave = ETinTinTVoiceOctave::Zero;
+    static constexpr ETinTinTVoiceOctave tVoiceStaticOctave = ETinTinTVoiceOctave::Five;
     
-    constexpr double tVoiceVelocity = 0.5;
-    constexpr int tVoiceMidiChannel = 1;
+    static constexpr double tVoiceVelocity = 0.5;
+    static constexpr int tVoiceMidiChannel = 1;
 }
 
 class JUCE_API TinTinProcessor
@@ -62,10 +62,14 @@ public:
     inline void panic() { _shouldPanic = true; }
 
     inline void toggleBypass() { _bypass = !_bypass; }
-    
+    inline void setBypass(bool bypass) { _bypass = bypass; }
+
     inline void toggleMuteMVoice() { _shouldMuteMVoice = !_shouldMuteMVoice; }
+    inline void setMuteMVoice(bool mute) { _shouldMuteMVoice = mute; }
+    inline bool getMuteMVoice() const { return _shouldMuteMVoice; }
 
     inline void updateTVoiceVelocity(float velocity) { _tVoiceVelocity = velocity; }
+    inline int getMidiChannel() const { return _tVoiceMidiChannel; }
     
     void resetProcessedMidiBuffer();
 
@@ -119,6 +123,7 @@ private:
     std::atomic_bool _shouldPanic = false;
     std::atomic_bool _bypass = false;
 
+    // TODO: Consider matching with MidiMessage ticks.
     std::uint32_t _globalVoiceTick{ 0 };
     std::uint32_t _directionTick{ 0 };
     std::uint32_t _positionTick{ 0 };
@@ -142,16 +147,16 @@ private:
     };
 
     std::vector<NoteOnPair> _noteOnMVoices{};
-    MidiNote lastFollowTVoice{};
-    MidiNote lastCounterTVoice{};
+    MidiNote _lastFollowTVoice{};
+    MidiNote _lastCounterTVoice{};
     
-    JUCE_NODISCARD Triad getSelectedTriad();
+    JUCE_NODISCARD Triad getSelectedTriad() const;
     JUCE_NODISCARD MidiNote resolveTVoice(MidiNote mVoice);
     JUCE_NODISCARD MidiInterval resolvedPosition(IntervalPositionPair voiceIntervalPair) const;
     JUCE_NODISCARD MidiNote resolvePositionAndOctave(
         MidiNote mVoice,
         const TinTinOctave& octave,
-        const IntervalPositionPair& positionPair);
+        const IntervalPositionPair& positionPair) const;
 
     void cacheNoteOnPair(NoteOnPair& noteOnPair);
 

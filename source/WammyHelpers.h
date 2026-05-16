@@ -12,16 +12,16 @@ namespace wammy::consts
     constexpr int INITIAL_M_VOICE_HELD_DOWN_CACHE_SIZE = 12;
     constexpr int NUM_MIDI_CHANNELS = 16;
     constexpr int NUM_MIDI_NOTES = 127;
-    constexpr const char* INVALID_MIDI_NOTE = "INVALID_MIDI_NOTE";
+    constexpr auto INVALID_MIDI_NOTE = "INVALID_MIDI_NOTE";
 
     [[maybe_unused]] constexpr size_t RING_BUFFER_SIZE = 512;
 }
 
 namespace wammy::audio_utils
 {
-    JUCE_NODISCARD inline MidiNote normalizeMidiNote(MidiNote midiNote)
+    JUCE_NODISCARD inline MidiNote normalizeMidiNote(const MidiNote midiNote)
     {
-        return midiNote % wammy::consts::NUM_SEMI_TONES_IN_OCTAVE;
+        return midiNote % consts::NUM_SEMI_TONES_IN_OCTAVE;
     }
 
     enum class ENote
@@ -40,7 +40,7 @@ namespace wammy::audio_utils
         B
     };
 
-    JUCE_NODISCARD constexpr std::string stringifyMidiNote(MidiNote midiNote)
+    JUCE_NODISCARD constexpr std::string stringifyMidiNote(const MidiNote midiNote)
     {
         switch (static_cast<ENote>(normalizeMidiNote(midiNote)))
         {

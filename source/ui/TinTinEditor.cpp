@@ -5,12 +5,12 @@
 namespace tin_tin::editor_consts
 {
     // Editor Name.
-    constexpr const char* TIN_TIN_NAME = "Tin Tin";
+    static constexpr const char* TIN_TIN_NAME = "Tin Tin";
 
     // Plugin dimensions.
-    constexpr int WIDTH = 550;
-    constexpr int HEIGHT = 300;
-    constexpr int PARENT_PADDING = 20;
+    static constexpr int WIDTH = 550;
+    static constexpr int HEIGHT = 300;
+    static constexpr int PARENT_PADDING = 20;
 }
 
 TinTinEditor::TinTinEditor (
@@ -35,12 +35,12 @@ TinTinEditor::TinTinEditor (
     setupTVoiceVelocitySlider();
     setupTMidiChannelSelector();
 
-    addAndMakeVisible (_octaveComponent);
+    addAndMakeVisible(_octaveComponent);
     _octaveComponent.setBounds (140, 107, 300, 80);
 
-    _noteDisplayComponent.setTriad (_processorRef.tinTinProcessor.selectedTriad);
+    _noteDisplayComponent.setTriad(_processorRef.tinTinProcessor.selectedTriad);
 
-    setSize (tin_tin::editor_consts::WIDTH, tin_tin::editor_consts::HEIGHT);
+    setSize(tin_tin::editor_consts::WIDTH, tin_tin::editor_consts::HEIGHT);
 }
 
 void TinTinEditor::paint (juce::Graphics& g)
@@ -51,7 +51,7 @@ void TinTinEditor::paint (juce::Graphics& g)
     // Title text.
     g.setColour (juce::Colours::white);
     g.setFont (16.0f);
-    g.drawText (
+    g.drawText(
         tin_tin::editor_consts::TIN_TIN_NAME,
         bounds.removeFromTop (50),
         juce::Justification::centred,
@@ -77,7 +77,7 @@ void TinTinEditor::paint (juce::Graphics& g)
         juce::Justification::centred,
         false);
 
-    _octaveComponent.paint (g);
+    _octaveComponent.paint(g);
 }
 
 void TinTinEditor::resized()
@@ -270,6 +270,8 @@ void TinTinEditor::setupMVoiceMuteToggle()
 
     addAndMakeVisible (_muteMVoiceToggle);
     _muteMVoiceToggle.setBounds (selectorPositionX, selectorPositionY, selectorWidth, selectorHeight);
+    _muteMVoiceToggle.setToggleState (
+        _processorRef.tinTinProcessor.getMuteMVoice(), juce::dontSendNotification);
     _muteMVoiceToggle.onStateChange = [&]() -> void {
         _processorRef.tinTinProcessor.toggleMuteMVoice();
 
@@ -340,7 +342,7 @@ void TinTinEditor::setupTMidiChannelSelector()
     _tVoiceMidiChannelSelector.addItem ("14", 14);
     _tVoiceMidiChannelSelector.addItem ("15", 15);
     _tVoiceMidiChannelSelector.addItem ("16", 16);
-    _tVoiceMidiChannelSelector.setSelectedId (tin_tin::defaults::tVoiceMidiChannel);
+    _tVoiceMidiChannelSelector.setSelectedId (_processorRef.tinTinProcessor.getMidiChannel());
     _tVoiceMidiChannelSelector.onChange = [&]() -> void {
         _processorRef.tinTinProcessor.updateTVoiceMidiChannel (
             _tVoiceMidiChannelSelector.getSelectedId());

@@ -32,8 +32,11 @@ struct IntervalPositionPair
 
 struct TinTinOctave
 {
-    ETinTinTVoiceOctave relativeOctave = ETinTinTVoiceOctave::Zero;
-    ETinTinTVoiceOctave staticOctave = ETinTinTVoiceOctave::Zero;
+    // Stored as raw offset integer cast to the enum type (not a named enum member).
+    // onChange computes: cast(selectedId - Zero). Reverse: itemId = storedOffset + Zero.
+    // 0 = no shift; 5 = octave 5 (matching tVoiceStaticOctave default).
+    ETinTinTVoiceOctave relativeOctave = static_cast<ETinTinTVoiceOctave>(0);
+    ETinTinTVoiceOctave staticOctave   = static_cast<ETinTinTVoiceOctave>(5);
     bool isStatic = false;
 };
 
@@ -42,7 +45,7 @@ struct TinTinVoiceTable
     TinTinVoiceTable() = delete;
 
     TinTinVoiceTable(
-        MidiNote inM_Voice,
+        const MidiNote inM_Voice,
         IntervalPositionPair&& inInferiorVoices,
         IntervalPositionPair&& inSuperiorVoices) :
         mVoice(inM_Voice),

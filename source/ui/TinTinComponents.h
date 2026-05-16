@@ -1,24 +1,20 @@
 #pragma once
 
-#include <utility>
-
-#include "juce_gui_extra/juce_gui_extra.h"
 #include "juce_gui_basics/juce_gui_basics.h"
-
 #include "../processors/PluginProcessor.h"
 
-class TinTinButton : public juce::TextButton
+class TinTinButton final : public juce::TextButton
 {
 public:
     TinTinButton() = default;
 
-    explicit TinTinButton(const juce::String& buttonName) : juce::TextButton(buttonName)
+    explicit TinTinButton(const juce::String& buttonName) : TextButton(buttonName)
     {
     }
 
     void paintButton(juce::Graphics& g, bool isMouseOverButton, bool isButtonDown) override
     {
-        juce::TextButton::paintButton(g, isMouseOverButton, isButtonDown);
+        TextButton::paintButton(g, isMouseOverButton, isButtonDown);
 
         g.setColour(juce::Colours::red);
         constexpr int borderThickness{ 2 };
@@ -34,9 +30,9 @@ class TinTinComboBox final : public juce::ComboBox
 public:
     explicit TinTinComboBox(const juce::String& componentName) : juce::ComboBox(componentName)
     {
-        setColour(ColourIds::backgroundColourId, BLACK);
-        setColour(ColourIds::buttonColourId, BLACK);
-        setColour(ColourIds::outlineColourId, WHITE);
+        setColour(backgroundColourId, BLACK);
+        setColour(buttonColourId, BLACK);
+        setColour(outlineColourId, WHITE);
 
         auto popupMenu = getRootMenu();
         juce::LookAndFeel_V4 lookAndFeel;

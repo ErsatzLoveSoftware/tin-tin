@@ -11,15 +11,15 @@ using namespace  wammy::audio_utils;
 
 namespace wammy::logger
 {
-    static inline void logMidiNote(MidiNote midiNote)
+    static void logMidiNote(MidiNote midiNote)
     {
-        midiNote = wammy::audio_utils::normalizeMidiNote(midiNote);
+        midiNote = normalizeMidiNote(midiNote);
         std::cout << stringifyMidiNote(midiNote) << '\n';
     }
 
-    static inline void logNotePair(MidiNote mVoice, const IntervalPositionPair& tVoice)
+    static void logNotePair(const MidiNote mVoice, const IntervalPositionPair& tVoice)
     {
-        const std::string mVoiceString = wammy::audio_utils::stringifyMidiNote(mVoice);
+        const std::string mVoiceString = stringifyMidiNote(mVoice);
 
         const MidiNote tVoiceFirstPosition = mVoice + tVoice.first;
         const std::string firstPositionString = tVoiceFirstPosition < 0 ?

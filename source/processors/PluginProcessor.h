@@ -9,7 +9,8 @@
 #endif
 
 class PluginProcessor :
-    public juce::AudioProcessor
+    public juce::AudioProcessor,
+    public juce::AudioProcessorParameter::Listener
 {
 public:
     PluginProcessor();
@@ -51,12 +52,15 @@ public:
     void getStateInformation(juce::MemoryBlock& destData) override;
     
     void setStateInformation(const void* data, int sizeInBytes) override;
+
+    void parameterValueChanged(int parameterIndex, float newValue) override;
+
+    void parameterGestureChanged(int parameterIndex, bool gestureIsStarting) override;
     
-public:
     juce::AudioProcessorValueTreeState paramTree;
     TinTinProcessor tinTinProcessor;
     
-    static juce::AudioProcessorValueTreeState::ParameterLayout createParameterLayout();
+    juce::AudioProcessorValueTreeState::ParameterLayout createParameterLayout();
 
 private:
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(PluginProcessor)

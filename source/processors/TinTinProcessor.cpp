@@ -17,10 +17,7 @@ TinTinProcessor::TinTinProcessor() noexcept
     );
 }
 
-TinTinProcessor::~TinTinProcessor() noexcept
-{
-    _processedMidiBuffer.clear();
-}
+TinTinProcessor::~TinTinProcessor() noexcept = default;
 
 void TinTinProcessor::resetProcessedMidiBuffer ()
 {
@@ -57,8 +54,7 @@ void TinTinProcessor::processImpl(juce::MidiBuffer& outMidiBuffer)
         _shouldPanic = false;
         return;
     }
-
-    // :::::::::::::: Apply T-Voice ::::::::::::::
+ 
     for (const juce::MidiMessageMetadata& midiMetadata : outMidiBuffer)
     {
         juce::MidiMessage mVoiceMidiMessage = midiMetadata.getMessage();
@@ -129,7 +125,7 @@ void TinTinProcessor::process(juce::MidiBuffer& outMidiBuffer)
 }
 
 void TinTinProcessor::updateVoiceCacheMap(
-    std::optional<ENote> triadRoot,
+    const std::optional<ENote> triadRoot,
     std::optional<ETinTinTriadType> triadType
 )
 {
@@ -161,11 +157,13 @@ IntervalPositionPair TinTinProcessor::computeSuperiorVoices(MidiNote note, const
     {
         return { triad.first - note, triad.second - note };
     }
-    else if (note < triad.second)
+
+    if (note < triad.second)
     {
         return { triad.second - note, triad.third - note };
     }
-    else if (note < triad.third)
+
+    if (note < triad.third)
     {
         return {
             triad.third - note,
@@ -182,7 +180,7 @@ IntervalPositionPair TinTinProcessor::computeSuperiorVoices(MidiNote note, const
 
 IntervalPositionPair TinTinProcessor::computeInferiorVoices(MidiNote note, const Triad& triad)
 {
-    note = wammy::audio_utils::normalizeMidiNote(note);
+    note = normalizeMidiNote(note);
 
     if (note <= triad.first)
     {
@@ -191,14 +189,16 @@ IntervalPositionPair TinTinProcessor::computeInferiorVoices(MidiNote note, const
             (triad.second - note) - NUM_SEMI_TONES_IN_OCTAVE
         };
     }
-    else if (note <= triad.second)
+
+    if (note <= triad.second)
     {
         return {
             triad.first - note,
             (triad.third - note) - NUM_SEMI_TONES_IN_OCTAVE
         };
     }
-    else if (note <= triad.third)
+
+    if (note <= triad.third)
     {
         return { triad.second - note, triad.first - note };
     }
@@ -231,15 +231,14 @@ MidiInterval TinTinProcessor::resolvedPosition(IntervalPositionPair voiceInterva
 MidiNote TinTinProcessor::resolvePositionAndOctave(
     MidiNote mVoice,
     const TinTinOctave& octave,
-    const IntervalPositionPair& positionPair
-)
+    const IntervalPositionPair& positionPair) const
 {
-    MidiNote tVoice = mVoice + resolvedPosition(positionPair) +
+    const MidiNote tVoice = mVoice + resolvedPosition(positionPair) +
                       (NUM_SEMI_TONES_IN_OCTAVE * static_cast<int>(octave.relativeOctave));
 
     if (octave.isStatic)
     {
-        return wammy::audio_utils::normalizeMidiNote(tVoice) +
+        return normalizeMidiNote(tVoice) +
                (NUM_SEMI_TONES_IN_OCTAVE * static_cast<int>(octave.staticOctave));
     }
 
@@ -248,7 +247,7 @@ MidiNote TinTinProcessor::resolvePositionAndOctave(
 
 MidiNote TinTinProcessor::resolveTVoice(MidiNote mVoice)
 {
-    MidiNote normalizedMVoice = wammy::audio_utils::normalizeMidiNote(mVoice);
+    const MidiNote normalizedMVoice = normalizeMidiNote(mVoice);
     for (const TinTinVoiceTable& voiceCache : _voiceTable)
     {
         if (normalizedMVoice != voiceCache.mVoice)
@@ -275,36 +274,36 @@ MidiNote TinTinProcessor::resolveTVoice(MidiNote mVoice)
         case (ETinTinDirection::FollowMVoiceDirection):
             if (mVoice == _previousMVoiceMidiNote)
             {
-                return lastFollowTVoice;
+                return _lastFollowTVoice;
             }
             
             if ((mVoice - _previousMVoiceMidiNote) > 0)
             {
-                lastFollowTVoice = resolvePositionAndOctave(mVoice, superiorOctave, voiceCache.superiorVoice); 
+                _lastFollowTVoice = resolvePositionAndOctave(mVoice, superiorOctave, voiceCache.superiorVoice); 
             }
             else
             {
-                lastFollowTVoice = resolvePositionAndOctave(mVoice, inferiorOctave, voiceCache.inferiorVoices);
+                _lastFollowTVoice = resolvePositionAndOctave(mVoice, inferiorOctave, voiceCache.inferiorVoices);
             }
             
-            return lastFollowTVoice;
+            return _lastFollowTVoice;
 
         case (ETinTinDirection::CounterMVoiceDirection):
             if (mVoice == _previousMVoiceMidiNote)
             {
-                return lastCounterTVoice;
+                return _lastCounterTVoice;
             }
             
             if ((mVoice - _previousMVoiceMidiNote) < 0)
             {
-                lastCounterTVoice = resolvePositionAndOctave(mVoice, superiorOctave, voiceCache.superiorVoice);
+                _lastCounterTVoice = resolvePositionAndOctave(mVoice, superiorOctave, voiceCache.superiorVoice);
             }
             else
             {
-                lastCounterTVoice = resolvePositionAndOctave(mVoice, inferiorOctave, voiceCache.inferiorVoices);
+                _lastCounterTVoice = resolvePositionAndOctave(mVoice, inferiorOctave, voiceCache.inferiorVoices);
             }
 
-            return lastCounterTVoice;
+            return _lastCounterTVoice;
         }
     }
 
@@ -313,7 +312,7 @@ MidiNote TinTinProcessor::resolveTVoice(MidiNote mVoice)
     return -1; // Error.
 }
 
-Triad TinTinProcessor::getSelectedTriad()
+Triad TinTinProcessor::getSelectedTriad() const
 {
     switch (_triadType)
     {
